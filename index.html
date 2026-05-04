@@ -182,26 +182,63 @@
     <div class="toast" id="toastMsg"><span id="toastText">Msg</span></div>
 
     <script>
-        // --- SUPABASE CONFIG ---
+        // --- SUPABASE CONFIG (EXACT KEY FROM USER) ---
         const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c'; // <--- PUT YOUR LONG eyJ... KEY HERE
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c'; 
+        
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (e) {
+            console.error("Supabase Client Init Error:", e);
+        }
 
         let masterPin = null, accounts = [], isSignUp = false, timer;
 
+        // Start App
         document.addEventListener('DOMContentLoaded', checkSession);
 
         async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) { showScreen('pinScreen'); document.getElementById('logoutBtn').style.display='block'; }
-            else { showScreen('authScreen'); document.getElementById('logoutBtn').style.display='none'; }
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                
+                if (data.session) { 
+                    showScreen('pinScreen'); 
+                    document.getElementById('logoutBtn').style.display='block'; 
+                } else { 
+                    showScreen('authScreen'); 
+                    document.getElementById('logoutBtn').style.display='none'; 
+                }
+            } catch (err) {
+                console.error("Session Error:", err);
+                // Fallback to Auth Screen instead of showing nothing
+                showScreen('authScreen');
+                showToast("Connection issue! Please check console.");
+            }
         }
 
         async function handleAuth() {
             const email = document.getElementById('emailInput').value, password = document.getElementById('passwordInput').value;
             if(!email || !password) return showToast("Enter credentials!");
+            
+            const btn = document.getElementById('authBtn');
+            btn.disabled = true; btn.innerText = "Processing...";
+            
             const { data, error } = isSignUp ? await supabase.auth.signUp({email, password}) : await supabase.auth.signInWithPassword({email, password});
-            if(error) showToast(error.message); else checkSession();
+            
+            btn.disabled = false; btn.innerText = isSignUp ? "Sign Up" : "Login";
+            
+            if(error) {
+                showToast(error.message);
+            } else {
+                if(isSignUp) {
+                    showToast("Account created! Please log in.");
+                    toggleAuthMode();
+                } else {
+                    checkSession();
+                }
+            }
         }
 
         function toggleAuthMode() {
@@ -228,7 +265,7 @@
             });
 
             if(fail && data.length > 0) { showToast("Wrong Master PIN!"); masterPin = null; }
-            else { showScreen('appScreen'); renderAccounts(); }
+            else { showScreen('appScreen'); renderAccounts(); showToast("Vault Unlocked!");}
         }
 
         async function addAccount() {
@@ -244,6 +281,8 @@
                 accounts.push({id: data[0].id, brand, username: user, secret});
                 renderAccounts(); showToast("Saved to Cloud!"); 
                 document.getElementById('brandInput').value = ''; document.getElementById('userInput').value = ''; document.getElementById('secretKeyInput').value = '';
+            } else {
+                showToast("Failed to save!");
             }
         }
 
@@ -290,7 +329,7 @@
         async function deleteAcc(id, index) {
             if(!confirm("Delete forever?")) return;
             const { error } = await supabase.from('user_2fa_secrets').delete().eq('id', id);
-            if(!error) { accounts.splice(index, 1); renderAccounts(); }
+            if(!error) { accounts.splice(index, 1); renderAccounts(); showToast("Deleted!");}
         }
 
         async function signOut() { await supabase.auth.signOut(); location.reload(); }
