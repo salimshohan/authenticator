@@ -3,47 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | 2FA Vault</title>
+    <title>Login | The Ironic Bro</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         :root { --bg-body: #f8fafc; --bg-card: #ffffff; --primary: #4f46e5; --text-main: #0f172a; --border: #e2e8f0; }
-        body { background: var(--bg-body); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; align-items: center; }
-        * { box-sizing: border-box; }
+        body { background: var(--bg-body); font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; align-items: center; }
+        * { box-sizing: border-box; outline: none; }
         
-        header { width: 100%; background: #fff; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; font-size: 1.5rem; font-weight: bold; color: var(--text-main); border-bottom: 3px solid var(--primary); }
+        nav { width: 100%; background: #fff; padding: 15px 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
+        .nav-brand { font-size: 1.4rem; font-weight: 800; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { color: var(--text-main); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.2s; }
+        .nav-links a:hover { color: var(--primary); }
+        .nav-links .active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        
         .container { margin-top: 50px; width: 100%; max-width: 400px; padding: 20px; flex: 1; }
-        .card { background: var(--bg-card); padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        .card { background: var(--bg-card); padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border); }
+        
+        h2 { margin-top: 0; color: var(--text-main); margin-bottom: 25px; }
         input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; }
-        input:focus { border-color: var(--primary); outline: none; }
-        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
-        .link { display: block; margin-top: 15px; color: var(--primary); text-decoration: none; }
-        footer { width: 100%; padding: 20px; text-align: center; background: #fff; border-top: 1px solid var(--border); color: #64748b; }
+        input:focus { border-color: var(--primary); }
+        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn:hover { background: #4338ca; }
+        .link { display: block; margin-top: 15px; color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;}
+        
+        footer { width: 100%; padding: 20px; text-align: center; background: #fff; border-top: 1px solid var(--border); color: #64748b; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <header><i class="fa-solid fa-shield"></i> The Ironic Bro Vault</header>
+    <nav>
+        <a href="index.html" class="nav-brand"><i class="fa-solid fa-shield-halved"></i> TIB Vault</a>
+        <div class="nav-links">
+            <a href="login.html" class="active">Login</a>
+            <a href="signup.html">Sign Up</a>
+        </div>
+    </nav>
 
     <div class="container">
         <div class="card">
             <h2>Welcome Back</h2>
             <input type="email" id="email" placeholder="Email Address">
             <input type="password" id="password" placeholder="Password">
-            <button class="btn" id="logBtn" onclick="signIn()">Login</button>
-            <a href="signup.html" class="link">No account? Sign Up.</a>
+            <button class="btn" id="logBtn" onclick="signIn()">Login to Vault</button>
+            <a href="signup.html" class="link">Don't have an account? Sign Up</a>
         </div>
     </div>
 
     <footer>&copy; 2026 The Ironic Bro. All rights reserved.</footer>
 
     <script>
-        const supabase = window.supabase.createClient('https://pykkprrhsxvfhcrhbiue.supabase.co', 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c');
+        const supabaseClient = window.supabase.createClient('https://pykkprrhsxvfhcrhbiue.supabase.co', 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c');
 
-        // Check if already logged in -> pathiye dibe vault.html e
         document.addEventListener('DOMContentLoaded', async () => {
-            const { data } = await supabase.auth.getSession();
-            if (data.session) window.location.href = "vault.html";
+            const { data } = await supabaseClient.auth.getSession();
+            if (data.session) window.location.href = "index.html";
         });
 
         async function signIn() {
@@ -52,10 +69,10 @@
             if(!email || !password) return alert("Fill all fields!");
 
             document.getElementById('logBtn').innerText = "Logging in...";
-            const { data, error } = await supabase.auth.signInWithPassword({email, password});
+            const { error } = await supabaseClient.auth.signInWithPassword({email, password});
             
-            if(error) { alert(error.message); document.getElementById('logBtn').innerText = "Login"; }
-            else { window.location.href = "vault.html"; } // Direct to App!
+            if(error) { alert(error.message); document.getElementById('logBtn').innerText = "Login to Vault"; }
+            else { window.location.href = "index.html"; }
         }
     </script>
 </body>
