@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | 2FA Vault</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg-body: #f8fafc; --bg-card: #ffffff; --primary: #4f46e5; --text-main: #0f172a; --border: #e2e8f0; }
+        body { background: var(--bg-body); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; align-items: center; }
+        * { box-sizing: border-box; }
+        
+        /* Direct Header */
+        header { width: 100%; background: #fff; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; font-size: 1.5rem; font-weight: bold; color: var(--text-main); border-bottom: 3px solid var(--primary); }
+        
+        .container { margin-top: 50px; width: 100%; max-width: 400px; padding: 20px; flex: 1; }
+        .card { background: var(--bg-card); padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; }
+        input:focus { border-color: var(--primary); outline: none; }
+        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
+        .link { display: block; margin-top: 15px; color: var(--primary); text-decoration: none; }
+        
+        /* Direct Footer */
+        footer { width: 100%; padding: 20px; text-align: center; background: #fff; border-top: 1px solid var(--border); color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <header><i class="fa-solid fa-shield"></i> The Ironic Bro Vault</header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Create Account</h2>
+            <p style="color: #64748b; margin-bottom: 20px;">Secure your 2FA codes today.</p>
+            <input type="email" id="email" placeholder="Email Address">
+            <input type="password" id="password" placeholder="Create Password">
+            <button class="btn" id="regBtn" onclick="signUp()">Sign Up</button>
+            <a href="login.html" class="link">Already have an account? Login.</a>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 The Ironic Bro. All rights reserved.</footer>
+
+    <script>
+        const supabase = window.supabase.createClient('https://pykkprrhsxvfhcrhbiue.supabase.co', 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c');
+
+        async function signUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            if(!email || !password) return alert("Fill all fields!");
+
+            document.getElementById('regBtn').innerText = "Creating...";
+            const { data, error } = await supabase.auth.signUp({email, password});
+            
+            if(error) { alert(error.message); document.getElementById('regBtn').innerText = "Sign Up"; }
+            else { alert("Success! Redirecting to login..."); window.location.href = "login.html"; }
+        }
+    </script>
+</body>
+</html>
