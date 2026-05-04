@@ -28,7 +28,6 @@
             font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0; padding: 0; min-height: 100vh;
             display: flex; flex-direction: column; align-items: center;
-            /* Global Anti-Copy */
             -webkit-user-select: none; user-select: none; 
         }
         * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
@@ -41,14 +40,24 @@
         h2.section-title { 
             font-size: 2rem; margin-bottom: 25px; 
             border-left: 5px solid var(--primary); padding-left: 15px; 
-            font-weight: 700; display: flex; align-items: center; justify-content: space-between;
+            font-weight: 700; color: var(--text-main);
         }
 
-        .btn-logout {
-            font-size: 0.9rem; padding: 8px 15px; background: #fee2e2;
-            color: var(--danger); border: none; border-radius: 8px; cursor: pointer;
-            font-weight: 600; display: none;
+        /* --- Profile System --- */
+        .profile-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 15px 20px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow-md);
         }
+        .user-info { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text-main); }
+        .user-info i { color: var(--primary); font-size: 1.5rem; }
+        .btn-logout {
+            font-size: 0.85rem; padding: 8px 15px; background: #fee2e2;
+            color: var(--danger); border: none; border-radius: 8px; cursor: pointer;
+            font-weight: 600; transition: 0.2s;
+        }
+        .btn-logout:hover { background: var(--danger); color: white; }
 
         /* --- Screen Logic --- */
         #authScreen, #pinScreen, #appScreen { display: none; width: 100%; }
@@ -62,8 +71,7 @@
 
         .floating-input { position: relative; margin-bottom: 20px; text-align: left; }
         .floating-input input {
-            width: 100%; padding: 18px 15px 12px;
-            border: 2px solid var(--border); border-radius: 10px;
+            width: 100%; padding: 18px 15px 12px; border: 2px solid var(--border); border-radius: 10px;
             background: transparent; font-size: 1rem; color: var(--text-main);
             transition: 0.3s; font-family: monospace;
         }
@@ -78,10 +86,8 @@
         }
 
         .btn-primary {
-            width: 100%; padding: 15px; border: none; border-radius: 10px;
-            font-size: 1.1rem; font-weight: 600; cursor: pointer; 
-            background: var(--primary); color: white; transition: 0.3s;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
+            width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; 
+            background: var(--primary); color: white; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px;
         }
         .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
         .btn-primary:disabled { background: var(--text-muted); cursor: not-allowed; }
@@ -102,39 +108,42 @@
         .btn-del { color: var(--text-muted); background: none; border: none; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
         .btn-del:hover { color: var(--danger); }
 
-        /* Only Codes are selectable */
         .current-code { 
             font-size: 2.2rem; font-weight: 700; color: var(--primary); 
             letter-spacing: 2px; font-family: monospace; cursor: pointer;
             -webkit-user-select: text; user-select: text;
         }
         
-        /* Sticky Reset (Bottom Right) */
+        /* Sticky Reset */
         .sticky-reset {
             position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px;
-            background: var(--bg-card); color: var(--danger);
-            border: 2px solid #fee2e2; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.2rem; cursor: pointer; z-index: 1000; box-shadow: var(--shadow-lg);
+            background: var(--bg-card); color: var(--danger); border: 2px solid #fee2e2; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; font-size: 1.2rem; cursor: pointer; z-index: 1000; box-shadow: var(--shadow-lg);
         }
 
         .toast {
             position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
-            background: var(--text-main); color: #fff; padding: 12px 25px;
-            border-radius: 50px; font-size: 0.9rem; transition: bottom 0.4s; z-index: 1000;
+            background: var(--text-main); color: #fff; padding: 12px 25px; border-radius: 50px; font-size: 0.9rem; transition: bottom 0.4s; z-index: 1000;
         }
         .toast.show { bottom: 30px; }
+
+        /* --- Footer --- */
+        footer {
+            width: 100%; padding: 25px 15px; text-align: center; background: #ffffff;
+            border-top: 1px solid var(--border); margin-top: auto; font-size: 14px; color: var(--text-muted);
+        }
+        .footer-content strong { color: var(--text-main); }
 
         @media (max-width: 480px) { .input-row { grid-template-columns: 1fr; gap: 0; } }
     </style>
 </head>
 <body>
 
+    <div id="header"></div>
+    <script type="text/javascript" src="/js/header.js"></script>
+
     <div class="container">
-        <h2 class="section-title">
-            <span><i class="fa-solid fa-shield-halved"></i> 2FA Vault</span>
-            <button id="logoutBtn" class="btn-logout" onclick="signOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-        </h2>
+        <h2 class="section-title"><i class="fa-solid fa-shield-halved"></i> 2FA Vault</h2>
 
         <div id="authScreen">
             <div class="card">
@@ -147,15 +156,25 @@
         </div>
 
         <div id="pinScreen">
+            <div class="profile-box">
+                <div class="user-info"><i class="fa-solid fa-circle-user"></i> <span id="userEmailPin">User</span></div>
+                <button class="btn-logout" onclick="signOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+
             <div class="card">
                 <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-lock"></i> Vault Locked</h3>
                 <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">Enter Master PIN to decrypt your keys.</p>
                 <div class="floating-input"><input type="password" id="masterPinInput" placeholder=" "><label>Master PIN</label></div>
-                <button class="btn-primary" onclick="unlockVault()"><i class="fa-solid fa-key"></i> Unlock</button>
+                <button class="btn-primary" onclick="unlockVault()"><i class="fa-solid fa-key"></i> Unlock Vault</button>
             </div>
         </div>
 
         <div id="appScreen">
+            <div class="profile-box">
+                <div class="user-info"><i class="fa-solid fa-circle-user"></i> <span id="userEmailApp">User</span></div>
+                <button class="btn-logout" onclick="signOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+
             <div class="card">
                 <div class="input-row">
                     <div class="floating-input"><input type="text" id="brandInput" placeholder=" "><label>Brand Name</label></div>
@@ -177,44 +196,38 @@
         </div>
     </div>
 
-    <button class="sticky-reset" onclick="resetAll()" title="Reset All"><i class="fa-solid fa-trash-can"></i></button>
+    <footer>
+        <div class="footer-content">
+            &copy; 2026 <strong>The Ironic Bro</strong><br>All rights reserved.
+        </div>
+    </footer>
 
+    <button class="sticky-reset" onclick="resetAll()" title="Reset All"><i class="fa-solid fa-trash-can"></i></button>
     <div class="toast" id="toastMsg"><span id="toastText">Msg</span></div>
 
     <script>
-        // --- SUPABASE CONFIG (EXACT KEY FROM USER) ---
         const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c'; 
-        
-        let supabase;
-        try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } catch (e) {
-            console.error("Supabase Client Init Error:", e);
-        }
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let masterPin = null, accounts = [], isSignUp = false, timer;
+        let masterPin = null, accounts = [], isSignUp = false, timer, currentUserId = null;
 
-        // Start App
         document.addEventListener('DOMContentLoaded', checkSession);
 
         async function checkSession() {
             try {
-                const { data, error } = await supabase.auth.getSession();
-                if (error) throw error;
-                
+                const { data, error } = await supabaseClient.auth.getSession();
                 if (data.session) { 
+                    currentUserId = data.session.user.id;
+                    const email = data.session.user.email;
+                    document.getElementById('userEmailPin').innerText = email;
+                    document.getElementById('userEmailApp').innerText = email;
                     showScreen('pinScreen'); 
-                    document.getElementById('logoutBtn').style.display='block'; 
                 } else { 
                     showScreen('authScreen'); 
-                    document.getElementById('logoutBtn').style.display='none'; 
                 }
             } catch (err) {
-                console.error("Session Error:", err);
-                // Fallback to Auth Screen instead of showing nothing
                 showScreen('authScreen');
-                showToast("Connection issue! Please check console.");
             }
         }
 
@@ -225,19 +238,16 @@
             const btn = document.getElementById('authBtn');
             btn.disabled = true; btn.innerText = "Processing...";
             
-            const { data, error } = isSignUp ? await supabase.auth.signUp({email, password}) : await supabase.auth.signInWithPassword({email, password});
+            const { data, error } = isSignUp 
+                ? await supabaseClient.auth.signUp({email, password}) 
+                : await supabaseClient.auth.signInWithPassword({email, password});
             
             btn.disabled = false; btn.innerText = isSignUp ? "Sign Up" : "Login";
             
-            if(error) {
-                showToast(error.message);
-            } else {
-                if(isSignUp) {
-                    showToast("Account created! Please log in.");
-                    toggleAuthMode();
-                } else {
-                    checkSession();
-                }
+            if(error) { showToast(error.message); } 
+            else {
+                if(isSignUp) { showToast("Account created! Please log in."); toggleAuthMode(); } 
+                else { checkSession(); }
             }
         }
 
@@ -252,7 +262,8 @@
             const pin = document.getElementById('masterPinInput').value;
             if(!pin) return showToast("PIN required!");
             masterPin = pin;
-            const { data, error } = await supabase.from('user_2fa_secrets').select('*');
+            
+            const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*');
             if(error) return showToast("Fetch error!");
 
             accounts = []; let fail = false;
@@ -270,19 +281,26 @@
 
         async function addAccount() {
             if(accounts.length >= 50) return showToast("50 Slots Limit!");
+            if(!currentUserId) return showToast("Session Error! Please re-login.");
+
             const brand = document.getElementById('brandInput').value || 'Service', user = document.getElementById('userInput').value;
             const secret = document.getElementById('secretKeyInput').value.replace(/\s+/g, '').toUpperCase();
             if(!secret) return showToast("Secret required!");
 
             const enc = CryptoJS.AES.encrypt(secret, masterPin).toString();
-            const { data, error } = await supabase.from('user_2fa_secrets').insert([{brand, username: user, encrypted_secret: enc}]).select();
+            
+            // 🔥 THE FIX: Added user_id to the insert payload!
+            const { data, error } = await supabaseClient.from('user_2fa_secrets')
+                .insert([{ user_id: currentUserId, brand: brand, username: user, encrypted_secret: enc }])
+                .select();
             
             if(!error) { 
                 accounts.push({id: data[0].id, brand, username: user, secret});
                 renderAccounts(); showToast("Saved to Cloud!"); 
                 document.getElementById('brandInput').value = ''; document.getElementById('userInput').value = ''; document.getElementById('secretKeyInput').value = '';
             } else {
-                showToast("Failed to save!");
+                showToast("Failed to save: " + error.message);
+                console.error(error);
             }
         }
 
@@ -318,21 +336,23 @@
             rem <= 5 ? bar.classList.add('danger') : bar.classList.remove('danger');
 
             accounts.forEach((acc, i) => {
-                let totp = new OTPAuth.TOTP({secret: OTPAuth.Secret.fromBase32(acc.secret)});
-                let code = totp.generate();
-                let el = document.getElementById(`code-${i}`);
-                el.innerText = code.slice(0,3) + ' ' + code.slice(3);
-                el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)';
+                try {
+                    let totp = new OTPAuth.TOTP({secret: OTPAuth.Secret.fromBase32(acc.secret)});
+                    let code = totp.generate();
+                    let el = document.getElementById(`code-${i}`);
+                    el.innerText = code.slice(0,3) + ' ' + code.slice(3);
+                    el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)';
+                } catch(e) {}
             });
         }
 
         async function deleteAcc(id, index) {
             if(!confirm("Delete forever?")) return;
-            const { error } = await supabase.from('user_2fa_secrets').delete().eq('id', id);
+            const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('id', id);
             if(!error) { accounts.splice(index, 1); renderAccounts(); showToast("Deleted!");}
         }
 
-        async function signOut() { await supabase.auth.signOut(); location.reload(); }
+        async function signOut() { await supabaseClient.auth.signOut(); location.reload(); }
         function showScreen(id) { ['authScreen', 'pinScreen', 'appScreen'].forEach(s => document.getElementById(s).style.display='none'); document.getElementById(id).style.display='block'; }
         function showToast(m) { document.getElementById('toastText').innerText = m; document.getElementById('toastMsg').classList.add('show'); setTimeout(()=>document.getElementById('toastMsg').classList.remove('show'), 3000); }
         function copyC(id) { navigator.clipboard.writeText(document.getElementById(id).innerText.replace(' ','')).then(()=>showToast("Copied!")); }
