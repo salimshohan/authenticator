@@ -3,58 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Vault | 2FA</title>
+    <title>My Vault | The Ironic Bro</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.2.2/otpauth.umd.min.js"></script>
+    
     <style>
-        :root { --bg-body: #f8fafc; --bg-card: #ffffff; --primary: #4f46e5; --text-main: #0f172a; --border: #e2e8f0; --danger: #ef4444; }
-        body { background: var(--bg-body); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; align-items: center; user-select: none; }
-        * { box-sizing: border-box; }
+        :root { --bg-body: #f8fafc; --bg-card: #ffffff; --primary: #4f46e5; --text-main: #0f172a; --border: #e2e8f0; --danger: #ef4444; --success: #10b981; }
+        body { background: var(--bg-body); font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; align-items: center; user-select: none; }
+        * { box-sizing: border-box; outline: none; }
         
-        header { width: 100%; background: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
-        .brand { font-size: 1.2rem; font-weight: bold; color: var(--text-main); }
-        .nav-links a { color: var(--text-main); text-decoration: none; margin-left: 15px; font-weight: bold; cursor: pointer;}
+        /* --- TIB Navbar --- */
+        nav { width: 100%; background: #fff; padding: 15px 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
+        .nav-brand { font-size: 1.4rem; font-weight: 800; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { color: var(--text-main); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.2s; }
         .nav-links a:hover { color: var(--primary); }
+        .nav-links .active { color: var(--primary); border-bottom: 2px solid var(--primary); }
         
-        .container { margin-top: 30px; width: 100%; max-width: 600px; padding: 20px; flex: 1; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border: 1px solid var(--border); }
+        /* --- Containers & Cards --- */
+        .container { margin-top: 40px; width: 100%; max-width: 600px; padding: 20px; flex: 1; }
+        .card { background: var(--bg-card); padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid var(--border); }
         
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; }
-        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
+        h2 { margin-top: 0; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 10px; }
+        input { width: 100%; padding: 14px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: monospace; }
+        input:focus { border-color: var(--primary); }
+        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.05rem; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn:hover { background: #4338ca; }
         
-        #appArea { display: none; }
+        /* --- Screen Logic --- */
+        #pinScreen, #appScreen { display: none; }
+        
+        /* --- App Styles --- */
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .acc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .code-text { font-size: 2rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; font-family: monospace; user-select: text; }
+        .acc-info { display: flex; flex-direction: column; }
+        .code-text { font-size: 2.2rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; font-family: monospace; user-select: text; cursor: pointer; }
+        .btn-del { color: var(--text-muted); background: none; border: none; cursor: pointer; font-size: 1.2rem; }
+        .btn-del:hover { color: var(--danger); }
         
-        footer { width: 100%; padding: 20px; text-align: center; background: #fff; border-top: 1px solid var(--border); color: #64748b; }
+        .progress-bar { height: 6px; background: var(--success); width: 100%; transition: width 1s linear; border-radius: 10px; margin-bottom: 20px; }
+        .progress-bar.danger { background: var(--danger); }
+        
+        footer { width: 100%; padding: 20px; text-align: center; background: #fff; border-top: 1px solid var(--border); color: #64748b; font-size: 0.9rem; }
+        @media (max-width: 480px) { .input-row { grid-template-columns: 1fr; gap: 0; } }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="brand"><i class="fa-solid fa-shield"></i> Vault</div>
+    <nav>
+        <a href="index.html" class="nav-brand"><i class="fa-solid fa-shield-halved"></i> TIB Vault</a>
         <div class="nav-links">
-            <a href="javascript:void(0)" onclick="signOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            <a href="index.html" class="active">Vault</a>
+            <a href="javascript:void(0)" onclick="signOut()">Logout</a>
         </div>
-    </header>
+    </nav>
 
     <div class="container">
-        <div class="card" id="unlockArea">
-            <h2 style="margin-top:0;"><i class="fa-solid fa-lock"></i> Vault Locked</h2>
-            <p style="color: #64748b;">Enter Master PIN to decrypt data.</p>
+        <div class="card" id="pinScreen" style="text-align: center;">
+            <h2><i class="fa-solid fa-lock"></i> Vault Locked</h2>
+            <p style="color: #64748b; margin-bottom: 20px;">Enter your Master PIN to decrypt your 2FA keys.</p>
             <input type="password" id="pinInput" placeholder="Master PIN">
-            <button class="btn" onclick="unlock()">Unlock Vault</button>
+            <button class="btn" onclick="unlockVault()"><i class="fa-solid fa-key"></i> Unlock</button>
         </div>
 
-        <div id="appArea">
-            <div class="card" style="text-align: left;">
-                <h3 style="margin-top:0;">Add New 2FA</h3>
-                <input type="text" id="brand" placeholder="Brand (e.g., GitHub)">
-                <input type="password" id="secret" placeholder="Secret Key">
-                <button class="btn" onclick="addSecret()">Save Securely</button>
+        <div id="appScreen">
+            <div class="card">
+                <h2>Add Authenticator</h2>
+                <div class="input-row">
+                    <input type="text" id="brand" placeholder="Brand Name (e.g. GitHub)">
+                    <input type="text" id="username" placeholder="Username (Optional)">
+                </div>
+                <input type="password" id="secret" placeholder="Secret Key (Base32)">
+                <button class="btn" onclick="addSecret()"><i class="fa-solid fa-plus"></i> Save to Vault</button>
             </div>
+
+            <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--text-muted); font-size:0.85rem; margin-bottom: 8px;">
+                <span>Valid for:</span> <span id="timerText">30s</span>
+            </div>
+            <div style="background:var(--border); border-radius:10px; height:6px;"><div class="progress-bar" id="progressBar"></div></div>
+
             <div id="codesList"></div>
         </div>
     </div>
@@ -62,65 +92,82 @@
     <footer>&copy; 2026 The Ironic Bro. All rights reserved.</footer>
 
     <script>
-        const supabase = window.supabase.createClient('https://pykkprrhsxvfhcrhbiue.supabase.co', 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c');
+        const supabaseClient = window.supabase.createClient('https://pykkprrhsxvfhcrhbiue.supabase.co', 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c');
         let masterPin = null, accounts = [], currentUser = null, timer;
 
-        // PROTECTED ROUTE CHECKER
+        // AUTH GUARD: If not logged in -> Redirect to login.html
         document.addEventListener('DOMContentLoaded', async () => {
-            const { data } = await supabase.auth.getSession();
+            const { data } = await supabaseClient.auth.getSession();
             if (!data.session) {
-                window.location.href = "login.html"; // Kick out!
+                window.location.href = "login.html";
             } else {
                 currentUser = data.session.user.id;
+                document.getElementById('pinScreen').style.display = 'block';
             }
         });
 
-        async function unlock() {
+        async function unlockVault() {
             masterPin = document.getElementById('pinInput').value;
-            if(!masterPin) return alert("Enter PIN!");
+            if(!masterPin) return alert("Please enter PIN!");
             
-            const { data, error } = await supabase.from('user_2fa_secrets').select('*');
+            const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*');
+            if(error) return alert("Error connecting to database!");
+
             accounts = []; let fail = false;
-            
             data.forEach(row => {
                 try {
                     const dec = CryptoJS.AES.decrypt(row.encrypted_secret, masterPin).toString(CryptoJS.enc.Utf8);
                     if(!dec) throw 'err';
-                    accounts.push({ id: row.id, brand: row.brand, secret: dec });
+                    accounts.push({ id: row.id, brand: row.brand, username: row.username, secret: dec });
                 } catch(e) { fail = true; }
             });
 
-            if(fail && data.length > 0) { alert("Wrong PIN!"); masterPin = null; }
-            else { 
-                document.getElementById('unlockArea').style.display = 'none'; 
-                document.getElementById('appArea').style.display = 'block';
+            if(fail && data.length > 0) { 
+                alert("Incorrect Master PIN!"); masterPin = null; 
+            } else { 
+                document.getElementById('pinScreen').style.display = 'none'; 
+                document.getElementById('appScreen').style.display = 'block';
                 renderCodes(); 
             }
         }
 
         async function addSecret() {
-            const brand = document.getElementById('brand').value;
+            if(accounts.length >= 50) return alert("Maximum 50 slots allowed!");
+            const brand = document.getElementById('brand').value || 'Unknown';
+            const user = document.getElementById('username').value;
             const secret = document.getElementById('secret').value.replace(/\s+/g, '').toUpperCase();
-            if(!secret || !brand) return alert("Fill all!");
+            
+            if(!secret) return alert("Secret key is required!");
+            try { new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(secret) }); } 
+            catch(e) { return alert("Invalid Secret Key format!"); }
 
             const enc = CryptoJS.AES.encrypt(secret, masterPin).toString();
-            const { data, error } = await supabase.from('user_2fa_secrets').insert([{user_id: currentUser, brand: brand, encrypted_secret: enc}]).select();
+            const { data, error } = await supabaseClient.from('user_2fa_secrets')
+                .insert([{user_id: currentUser, brand: brand, username: user, encrypted_secret: enc}])
+                .select();
             
             if(!error) {
-                accounts.push({id: data[0].id, brand: brand, secret: secret});
-                document.getElementById('brand').value = ''; document.getElementById('secret').value = '';
+                accounts.push({id: data[0].id, brand: brand, username: user, secret: secret});
+                document.getElementById('brand').value = ''; document.getElementById('username').value = ''; document.getElementById('secret').value = '';
                 renderCodes();
-            } else { alert("Error saving!"); }
+            } else { alert("Failed to save!"); }
         }
 
         function renderCodes() {
             const list = document.getElementById('codesList');
             list.innerHTML = '';
             accounts.forEach((acc, i) => {
+                let userHtml = acc.username ? `<div style="font-size:0.8rem; color:var(--text-muted);"><i class="fa-regular fa-user"></i> ${acc.username}</div>` : '';
                 list.insertAdjacentHTML('beforeend', `
                     <div class="acc-card">
-                        <div><strong>${acc.brand}</strong></div>
-                        <div class="code-text" id="code-${i}">------</div>
+                        <div class="acc-info">
+                            <strong style="font-size:1.1rem; color:var(--text-main);">${acc.brand}</strong>
+                            ${userHtml}
+                        </div>
+                        <div style="display:flex; align-items:center; gap:20px;">
+                            <div class="code-text" id="code-${i}" onclick="copyC('code-${i}')">------</div>
+                            <button class="btn-del" onclick="delAcc('${acc.id}', ${i})"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
                     </div>`);
             });
             updateTimer();
@@ -129,17 +176,35 @@
         }
 
         function updateTimer() {
+            let rem = 30 - (Math.floor(Date.now() / 1000) % 30);
+            document.getElementById('timerText').innerText = rem + "s";
+            let bar = document.getElementById('progressBar');
+            bar.style.width = (rem/30*100) + "%";
+            rem <= 5 ? bar.classList.add('danger') : bar.classList.remove('danger');
+
             accounts.forEach((acc, i) => {
                 try {
-                    let totp = new OTPAuth.TOTP({secret: OTPAuth.Secret.fromBase32(acc.secret)});
-                    let c = totp.generate();
-                    document.getElementById(`code-${i}`).innerText = c.slice(0,3) + ' ' + c.slice(3);
+                    let c = new OTPAuth.TOTP({secret: OTPAuth.Secret.fromBase32(acc.secret)}).generate();
+                    let el = document.getElementById(`code-${i}`);
+                    el.innerText = c.slice(0,3) + ' ' + c.slice(3);
+                    el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)';
                 } catch(e){}
             });
         }
 
+        async function delAcc(id, index) {
+            if(!confirm("Delete this authenticator?")) return;
+            const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('id', id);
+            if(!error) { accounts.splice(index, 1); renderCodes(); }
+        }
+
+        function copyC(id) {
+            let txt = document.getElementById(id).innerText.replace(' ','');
+            navigator.clipboard.writeText(txt).then(() => alert("Code Copied!"));
+        }
+
         async function signOut() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             window.location.href = "login.html";
         }
     </script>
