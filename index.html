@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure 2FA Vault | The Ironic Bro</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.2.2/otpauth.umd.min.js"></script>
+
+    <style>
+        /* --- Global Styles (TIB Smart Light Mode) --- */
+        :root {
+            --bg-body: #f8fafc; --bg-card: #ffffff; 
+            --primary: #4f46e5; --primary-hover: #4338ca; 
+            --text-main: #0f172a; --text-muted: #64748b; 
+            --border: #e2e8f0; --success: #10b981; --danger: #ef4444;
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        body { 
+            background: var(--bg-body) radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px; color: var(--text-main); 
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding: 0; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            -webkit-user-select: none; user-select: none; 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        .container { 
+            margin-top: 60px; width: 100%; max-width: 600px; 
+            padding: 0 20px; flex: 1; margin-bottom: 50px;
+        }
+
+        h2.section-title { 
+            font-size: 2rem; margin-bottom: 25px; 
+            border-left: 5px solid var(--primary); padding-left: 15px; 
+            font-weight: 700; display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .btn-logout {
+            font-size: 0.9rem; padding: 8px 15px; background: #fee2e2;
+            color: var(--danger); border: none; border-radius: 8px; cursor: pointer;
+            font-weight: 600; display: none;
+        }
+
+        /* --- Screens --- */
+        #authScreen, #pinScreen, #appScreen { display: none; width: 100%; }
+
+        /* --- Cards & Inputs --- */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 30px; box-shadow: var(--shadow-md);
+            margin-bottom: 30px; text-align: center;
+        }
+
+        .floating-input { position: relative; margin-bottom: 20px; text-align: left; }
+        .floating-input input {
+            width: 100%; padding: 18px 15px 12px;
+            border: 2px solid var(--border); border-radius: 10px;
+            background: transparent; font-size: 1rem; color: var(--text-main);
+            transition: 0.3s;
+        }
+        .floating-input label {
+            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: 0.95rem; transition: 0.3s;
+            pointer-events: none; background: var(--bg-card); padding: 0 5px;
+        }
+        .floating-input input:focus, .floating-input input:not(:placeholder-shown) {
+            border-color: var(--primary);
+        }
+        .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label {
+            top: 0; font-size: 0.85rem; color: var(--primary); font-weight: 700;
+        }
+
+        .btn-primary {
+            width: 100%; padding: 15px; border: none; border-radius: 10px;
+            font-size: 1.1rem; font-weight: 600; cursor: pointer; 
+            background: var(--primary); color: white; transition: 0.3s;
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        .auth-toggle { margin-top: 15px; font-size: 0.9rem; color: var(--primary); cursor: pointer; font-weight: 600;}
+        
+        /* --- 2FA App Styles --- */
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .global-timer { background: var(--bg-card); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; display: none; }
+        .progress-bar { height: 6px; background: var(--success); width: 100%; transition: width 1s linear; border-radius: 10px;}
+        .progress-bar.danger { background: var(--danger); }
+        
+        .acc-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; margin-bottom: 15px;
+        }
+        .acc-header { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 10px; margin-bottom: 15px;}
+        .btn-del { color: var(--danger); background: none; border: none; cursor: pointer; font-size: 1.2rem; }
+        .current-code { font-size: 2.2rem; font-weight: 700; color: var(--primary); letter-spacing: 2px; font-family: monospace; cursor: pointer; user-select: text; }
+        
+        /* Toast */
+        .toast {
+            position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+            background: var(--text-main); color: #fff; padding: 12px 25px;
+            border-radius: 50px; font-size: 0.9rem; transition: bottom 0.4s; z-index: 1000;
+        }
+        .toast.show { bottom: 30px; }
+
+        /* Loader */
+        #loader { display: none; margin-top: 20px; color: var(--primary); font-weight: bold; }
+        
+        @media (max-width: 480px) { .input-row { grid-template-columns: 1fr; gap: 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="section-title">
+            <span><i class="fa-solid fa-shield-halved"></i> 2FA Vault</span>
+            <button id="logoutBtn" class="btn-logout" onclick="signOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </h2>
+
+        <div id="authScreen">
+            <div class="card">
+                <h3 style="margin-bottom: 20px; color: var(--text-main);" id="authTitle">Login to Vault</h3>
+                <div class="floating-input">
+                    <input type="email" id="emailInput" placeholder=" ">
+                    <label>Email Address</label>
+                </div>
+                <div class="floating-input">
+                    <input type="password" id="passwordInput" placeholder=" ">
+                    <label>Password</label>
+                </div>
+                <button class="btn-primary" id="authBtn" onclick="handleAuth()">Login</button>
+                <div class="auth-toggle" id="authToggle" onclick="toggleAuthMode()">No account? Sign Up here.</div>
+            </div>
+        </div>
+
+        <div id="pinScreen">
+            <div class="card">
+                <h3 style="margin-bottom: 10px; color: var(--text-main);"><i class="fa-solid fa-lock"></i> Vault Locked</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">Enter your Master PIN to decrypt your 2FA keys. This is never saved online.</p>
+                
+                <div class="floating-input">
+                    <input type="password" id="masterPinInput" placeholder=" " maxlength="20">
+                    <label>Master Vault PIN</label>
+                </div>
+                <button class="btn-primary" onclick="unlockVault()"><i class="fa-solid fa-key"></i> Unlock Vault</button>
+                <div id="loader"><i class="fa-solid fa-spinner fa-spin"></i> Decrypting Data...</div>
+            </div>
+        </div>
+
+        <div id="appScreen">
+            <div class="card" style="text-align: left;">
+                <div class="input-row">
+                    <div class="floating-input"><input type="text" id="brandInput" placeholder=" "><label>Brand (e.g. GitHub)</label></div>
+                    <div class="floating-input"><input type="text" id="userInput" placeholder=" "><label>Username (Optional)</label></div>
+                </div>
+                <div class="floating-input"><input type="password" id="secretKeyInput" placeholder=" "><label>Secret Key</label></div>
+                <button class="btn-primary" onclick="addAccount()"><i class="fa-solid fa-plus"></i> Add to Secure Vault</button>
+            </div>
+
+            <div class="global-timer" id="globalTimer">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-weight:600; font-size:0.9rem; color:var(--text-muted);">
+                    <span>Valid for:</span><span id="countdownText">30s</span>
+                </div>
+                <div style="background:var(--border); border-radius:10px; height:6px;"><div class="progress-bar" id="progressBar"></div></div>
+            </div>
+
+            <div id="accountsContainer"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toastMsg"><i class="fa-solid fa-info-circle"></i> <span id="toastText">Msg</span></div>
+
+    <script>
+        // ==========================================
+        // 1. SUPABASE CONFIGURATION (UPDATE THIS!)
+        // ==========================================
+        const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c'; // <-- APNAR KEY EKHANE PASTE KORUN
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==========================================
+        // 2. STATE VARIABLES
+        // ==========================================
+        let isSignUpMode = false;
+        let masterPin = null; // Key stays in RAM only!
+        let accounts = []; // Decrypted accounts
+        let timerInterval;
+
+        // ==========================================
+        // 3. INITIALIZATION & AUTHENTICATION
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', checkSession);
+
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                showScreen('pinScreen');
+                document.getElementById('logoutBtn').style.display = 'block';
+            } else {
+                showScreen('authScreen');
+                document.getElementById('logoutBtn').style.display = 'none';
+            }
+        }
+
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('authTitle').innerText = isSignUpMode ? "Create Account" : "Login to Vault";
+            document.getElementById('authBtn').innerText = isSignUpMode ? "Sign Up" : "Login";
+            document.getElementById('authToggle').innerText = isSignUpMode ? "Already have an account? Login." : "No account? Sign Up here.";
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            if(!email || !password) return showToast("Enter email and password!");
+
+            let result;
+            if (isSignUpMode) {
+                result = await supabase.auth.signUp({ email, password });
+                if(result.error) showToast(result.error.message);
+                else { showToast("Signup successful! Please login."); toggleAuthMode(); }
+            } else {
+                result = await supabase.auth.signInWithPassword({ email, password });
+                if(result.error) showToast(result.error.message);
+                else checkSession();
+            }
+        }
+
+        async function signOut() {
+            await supabase.auth.signOut();
+            masterPin = null; // Wipe memory
+            accounts = [];
+            if(timerInterval) clearInterval(timerInterval);
+            document.getElementById('masterPinInput').value = '';
+            checkSession();
+        }
+
+        // ==========================================
+        // 4. THE VAULT (ENCRYPTION/DECRYPTION)
+        // ==========================================
+        async function unlockVault() {
+            const pin = document.getElementById('masterPinInput').value;
+            if(!pin) return showToast("Enter your PIN!");
+            
+            document.getElementById('loader').style.display = 'block';
+            masterPin = pin; // Save to RAM
+            
+            // Fetch from cloud
+            const { data, error } = await supabase.from('user_2fa_secrets').select('*');
+            
+            if (error) {
+                showToast("Error fetching data!");
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
+
+            accounts = [];
+            let decryptError = false;
+
+            // Decrypt Loop
+            for (let row of data) {
+                try {
+                    const bytes = CryptoJS.AES.decrypt(row.encrypted_secret, masterPin);
+                    const decryptedSecret = bytes.toString(CryptoJS.enc.Utf8);
+                    
+                    if (!decryptedSecret) throw new Error("Wrong PIN"); // If decryption yields nothing
+                    
+                    accounts.push({
+                        id: row.id,
+                        brand: row.brand,
+                        username: row.username,
+                        secret: decryptedSecret
+                    });
+                } catch (e) {
+                    decryptError = true;
+                }
+            }
+
+            document.getElementById('loader').style.display = 'none';
+
+            if (decryptError && data.length > 0) {
+                showToast("Incorrect PIN! Cannot decrypt data.");
+                masterPin = null;
+            } else {
+                showToast("Vault Unlocked!");
+                showScreen('appScreen');
+                renderAccounts();
+            }
+        }
+
+        // ==========================================
+        // 5. 2FA APP LOGIC (CLOUD SYNC)
+        // ==========================================
+        async function addAccount() {
+            const brand = document.getElementById('brandInput').value.trim() || 'Unknown';
+            const username = document.getElementById('userInput').value.trim();
+            const rawSecret = document.getElementById('secretKeyInput').value.replace(/\s+/g, '').toUpperCase();
+
+            if (!rawSecret) return showToast("Secret Key required!");
+            try { new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(rawSecret) }); } 
+            catch (e) { return showToast("Invalid Secret format!"); }
+
+            // ENCRYPT BEFORE SAVING!
+            const encryptedSecret = CryptoJS.AES.encrypt(rawSecret, masterPin).toString();
+
+            const { data, error } = await supabase.from('user_2fa_secrets').insert([
+                { brand: brand, username: username, encrypted_secret: encryptedSecret }
+            ]).select();
+
+            if (error) return showToast("Database error!");
+
+            // Add to local RAM array & render
+            accounts.push({ id: data[0].id, brand, username, secret: rawSecret });
+            
+            document.getElementById('brandInput').value = '';
+            document.getElementById('userInput').value = '';
+            document.getElementById('secretKeyInput').value = '';
+            showToast("Saved to Cloud securely!");
+            renderAccounts();
+        }
+
+        async function deleteAccount(id, index) {
+            if(!confirm("Delete this 2FA code permanently?")) return;
+            
+            const { error } = await supabase.from('user_2fa_secrets').delete().eq('id', id);
+            if (error) return showToast("Failed to delete from cloud.");
+            
+            accounts.splice(index, 1);
+            renderAccounts();
+            showToast("Deleted securely.");
+        }
+
+        // --- Render & Timer UI ---
+        function renderAccounts() {
+            const container = document.getElementById('accountsContainer');
+            container.innerHTML = '';
+            
+            if(accounts.length === 0) {
+                document.getElementById('globalTimer').style.display = 'none';
+                if(timerInterval) clearInterval(timerInterval);
+                return;
+            }
+
+            document.getElementById('globalTimer').style.display = 'block';
+
+            accounts.forEach((acc, index) => {
+                const userHtml = acc.username ? `<div style="font-size:0.85rem; color:var(--text-muted);"><i class="fa-regular fa-circle-user"></i> ${acc.username}</div>` : '';
+                const card = `
+                    <div class="acc-card">
+                        <div class="acc-header">
+                            <div><div style="font-weight:700;">${acc.brand}</div>${userHtml}</div>
+                            <button class="btn-del" onclick="deleteAccount('${acc.id}', ${index})"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div class="current-code" id="curr-${index}" onclick="copyCode('curr-${index}')">------</div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', card);
+            });
+
+            updateCodes();
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateCodes, 1000);
+        }
+
+        function updateCodes() {
+            if(accounts.length === 0) return;
+            let epoch = Math.floor(Date.now() / 1000);
+            let remaining = 30 - (epoch % 30);
+            
+            document.getElementById('countdownText').innerText = remaining + "s";
+            let bar = document.getElementById('progressBar');
+            bar.style.width = ((remaining / 30) * 100) + "%";
+            remaining <= 5 ? bar.classList.add('danger') : bar.classList.remove('danger');
+
+            accounts.forEach((acc, index) => {
+                try {
+                    let totp = new OTPAuth.TOTP({ algorithm: 'SHA1', digits: 6, period: 30, secret: OTPAuth.Secret.fromBase32(acc.secret) });
+                    let code = totp.generate();
+                    let el = document.getElementById(`curr-${index}`);
+                    el.innerText = code.slice(0,3) + ' ' + code.slice(3);
+                    el.style.color = remaining <= 5 ? 'var(--danger)' : 'var(--primary)';
+                } catch(e) {}
+            });
+        }
+
+        // ==========================================
+        // 6. UTILS (UI & Copy)
+        // ==========================================
+        function showScreen(screenId) {
+            ['authScreen', 'pinScreen', 'appScreen'].forEach(id => document.getElementById(id).style.display = 'none');
+            document.getElementById(screenId).style.display = 'block';
+        }
+
+        function copyCode(id) {
+            let txt = document.getElementById(id).innerText.replace(' ', '');
+            if(txt === "------") return;
+            navigator.clipboard.writeText(txt).then(() => showToast("Code copied!"));
+        }
+
+        function showToast(msg) {
+            document.getElementById('toastText').innerText = msg;
+            const t = document.getElementById('toastMsg');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
