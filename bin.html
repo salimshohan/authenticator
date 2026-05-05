@@ -12,23 +12,18 @@
     
     <style>
         /* --- GLOBAL STYLES --- */
-        :root { --bg-body: #f8fafc; --primary: #4f46e5; --primary-hover: #4338ca; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --bg-card: #ffffff; }
+        :root { --bg-body: #f8fafc; --primary: #4f46e5; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --bg-card: #ffffff; }
         body { margin: 0; padding-top: 80px; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         * { box-sizing: border-box; outline: none; }
-        .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 
-        /* --- HEADER STYLES --- */
+        /* --- HEADER & NAV --- */
         header { width: 100%; background: linear-gradient(90deg, #4f46e5, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; color: white; text-transform: uppercase; text-decoration: none; }
         .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; font-weight: 900;}
         .hamburger { cursor: pointer; width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; z-index: 2001; background: rgba(255, 255, 255, 0.15); border-radius: 8px; transition: 0.3s; }
-        .hamburger:hover { background: rgba(255, 255, 255, 0.25); }
         .hamburger span { display: block; height: 3px; width: 24px; background: white; border-radius: 2px; transition: 0.3s; }
-        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
-        .hamburger.active span:nth-child(2) { opacity: 0; }
-        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
         
-        /* NAV MENU */
+        /* MOBILE MENU */
         .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; padding-bottom: 20px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
         .mobile-menu.active { right: 0; }
         .mobile-menu a { color: #333; text-decoration: none; padding: 12px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; }
@@ -36,37 +31,32 @@
         .mobile-menu a:hover, .mobile-menu a.active { background: #eff0f0; color: var(--primary); border-left: 4px solid var(--primary); }
         .menu-section-title { padding: 15px 25px 5px; font-size: 0.75rem; color: #94a3b8; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 
-        /* --- CARDS & UI --- */
+        /* --- UI ELEMENTS --- */
         .container { width: 100%; max-width: 500px; padding: 20px; flex: 1; margin-bottom: 40px;}
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border: 1px solid var(--border); }
         .primary-text { color: var(--primary) !important; font-weight: 800; margin-top: 0; margin-bottom: 8px; font-size: 1.5rem;}
         .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;}
 
-        /* --- INPUTS & BUTTONS --- */
-        .input-group { position: relative; text-align: left; margin-bottom: 25px; width: 100%; }
-        .floating-input { position: relative; width: 100%; }
-        .floating-input input { width: 100%; padding: 16px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; background: transparent; color: var(--text-main); transition: 0.3s; }
-        .floating-input label { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: var(--bg-card); padding: 0 6px; color: #64748b; font-size: 1rem; pointer-events: none; transition: 0.2s ease all; display: flex; align-items: center; gap: 6px; }
-        .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
-        .floating-input input:focus { border-color: var(--primary); }
-        .floating-input input.error-border { border-color: var(--danger) !important; }
-        .inline-error { color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-top: -20px; margin-bottom: 25px; text-align: left; display: none; padding-left: 5px; }
-
-        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px;}
-        .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); }
-        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
-
-        /* --- BIN SPECIFIC STYLES --- */
+        /* BIN SPECIFIC STYLES */
         .top-action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px dashed var(--border);}
         
-        .bin-card { background: #fff5f5; border: 1px solid #fecaca; border-radius: 12px; margin-bottom: 15px; overflow: hidden; transition: 0.2s;}
-        .bin-card:hover { border-color: var(--danger); }
+        .bin-card { background: #fff5f5; border: 1px solid #fecaca; border-radius: 12px; margin-bottom: 15px; overflow: hidden; transition: 0.2s; position: relative;}
+        .bin-card:hover { border-color: var(--danger); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1); }
         
-        .bin-top-block { padding: 12px 20px; border-bottom: 1px solid #fecaca; text-align: left; }
-        .acc-brand { font-size: 1.1rem; font-weight: 700; color: var(--text-main); display: block; }
+        .bin-top-block { padding: 15px 20px; border-bottom: 1px solid #fecaca; text-align: left; display: flex; justify-content: space-between; align-items: flex-start; }
+        .acc-info { flex: 1; overflow: hidden; }
+        .acc-brand { font-size: 1.1rem; font-weight: 700; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .acc-user { font-size: 0.85rem; color: #64748b; display: block; margin-top: 2px; }
+        
+        /* Auto Delete Badge */
+        .days-left-badge { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 50px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; margin-left: 10px; }
+        .days-left-badge.safe { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+        .days-left-badge.warning { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+        .days-left-badge.danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; animation: pulse 2s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-        .bin-action-block { padding: 15px 20px; display: flex; justify-content: space-between; gap: 10px; }
+        .bin-action-block { padding: 12px 20px; display: flex; justify-content: space-between; gap: 10px; background: white; }
         .btn-restore { flex: 1; padding: 10px; background: white; color: var(--success); border: 2px solid var(--success); border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-restore:hover { background: var(--success); color: white; }
         
@@ -76,7 +66,6 @@
         .empty-bin-btn { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
         .empty-bin-btn:hover { background: #b91c1c; }
 
-        /* CENTERED TOAST */
         .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); opacity: 0; padding: 12px 24px; border-radius: 8px; color: white; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; box-shadow: 0 8px 25px rgba(0,0,0,0.2); pointer-events: none; }
         .toast.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         .toast.success { background: #1f2937; border-left: 4px solid var(--success); }
@@ -86,10 +75,8 @@
 <body>
 
     <header>
-        <a href="index.html" class="brand-logo">
-            <div class="logo-icon">IB</div> 2FA Vault
-        </a>
-        <div class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></div>
+        <a href="index.html" class="brand-logo"><div class="logo-icon">IB</div> 2FA Vault</a>
+        <div class="hamburger" id="hamburgerBtn" onclick="toggleMenu()"><span></span><span></span><span></span></div>
     </header>
 
     <div class="mobile-menu" id="mobileMenu">
@@ -97,13 +84,7 @@
         <a href="index.html"><i class="fa-solid fa-house"></i> Dashboard</a>
         <a href="profile.html"><i class="fa-solid fa-circle-user"></i> My Profile</a>
         <a href="bin.html" class="active"><i class="fa-solid fa-trash-arrow-up"></i> Recycle Bin</a>
-        <a href="import-export.html"><i class="fa-solid fa-file-export"></i> Import / Export</a>
-        <a href="change-pin.html"><i class="fa-solid fa-lock"></i> Change Master PIN</a>
         <a href="settings.html"><i class="fa-solid fa-gear"></i> App Settings</a>
-        
-        <div class="menu-section-title">Support & Info</div>
-        <a href="faq.html"><i class="fa-solid fa-clipboard-question"></i> Help & FAQ</a>
-        <a href="about.html"><i class="fa-solid fa-circle-info"></i> About App</a>
         
         <div style="margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 5px;">
             <a onclick="logOut()" style="color: var(--danger);"><i class="fa-solid fa-right-from-bracket"></i> Logout Securely</a>
@@ -113,29 +94,18 @@
     <div class="container">
         <div id="loadingScreen" style="display:flex; flex-direction:column; align-items:center; margin-top:100px;">
             <i class="fa-solid fa-spinner fa-spin" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
-            <div style="color:var(--primary); font-weight:bold; font-size:1.2rem;">Checking Bin...</div>
-        </div>
-
-        <div class="card" id="unlockPinScreen" style="display:none;">
-            <i class="fa-solid fa-lock" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 10px;"></i>
-            <h2 class="primary-text">Vault Locked</h2>
-            <p class="subtitle">Enter your Master PIN to view deleted keys.</p>
-            
-            <div class="input-group"><div class="floating-input"><input type="password" id="masterPinInput" placeholder=" "><label><i class="fa-solid fa-key"></i> Enter Master PIN</label></div></div>
-            <div id="unlockPinErr" class="inline-error"></div>
-            
-            <button class="btn" id="unlockBtn" onclick="unlockVault()"><i class="fa-solid fa-unlock-keyhole"></i> Unlock Vault</button>
+            <div style="color:var(--primary); font-weight:bold; font-size:1.2rem;">Checking Bin & Auto-deletes...</div>
         </div>
 
         <div id="appScreen" style="display:none;">
             <div style="text-align: center; margin-bottom: 20px;">
                 <i class="fa-solid fa-trash-can" style="font-size: 3rem; color: var(--danger); margin-bottom: 10px;"></i>
                 <h2 class="primary-text" style="color: var(--danger) !important;">Recycle Bin</h2>
-                <p class="subtitle" style="margin-top:-5px;">Codes here are hidden from the dashboard.</p>
+                <p class="subtitle" style="margin-top:-5px; font-size: 0.85rem;">Items automatically delete after <span id="retentionDaysText" style="font-weight:bold;">30</span> days.</p>
             </div>
 
             <div class="top-action-bar" id="binActionBar" style="display:none;">
-                <div style="font-weight:700; color:var(--text-main);"><span id="binCount">0</span> items in Bin</div>
+                <div style="font-weight:700; color:var(--text-main);"><span id="binCount">0</span> items</div>
                 <button class="empty-bin-btn" onclick="emptyBin()"><i class="fa-solid fa-dumpster-fire"></i> Empty Bin</button>
             </div>
 
@@ -147,12 +117,19 @@
 
     <script>
         let supabaseClient;
-        let masterPin = null, binAccounts = [], currentUser = null;
-        const PIN_TIMEOUT_MS = 30 * 60 * 1000; 
+        let binAccounts = [], currentUser = null;
+        
+        // Settings configuration (Default 30 days)
+        // Poreo settings page e giye localStorage.setItem('bin_retention_days', 15) korle eta auto change hoye jabe
+        const RETENTION_DAYS = parseInt(localStorage.getItem('bin_retention_days')) || 30;
+
+        function toggleMenu() { 
+            document.getElementById("hamburgerBtn").classList.toggle("active"); 
+            document.getElementById("mobileMenu").classList.toggle("active"); 
+        }
 
         async function initApp() {
             try {
-                // Initialize Supabase
                 const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
                 const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c';
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -161,95 +138,57 @@
                 if (!data || !data.session) return window.location.replace("login.html");
                 
                 currentUser = data.session.user.id;
-                const userMeta = data.session.user.user_metadata || {};
+                document.getElementById('retentionDaysText').innerText = RETENTION_DAYS;
                 
-                const cachedPin = localStorage.getItem('vault_pin');
-                const cachedTime = localStorage.getItem('vault_pin_time');
-                
+                // No need for PIN in Bin since we are not decrypting the secrets here.
+                // We just show brand names and remaining days.
                 document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('appScreen').style.display = 'block';
+                fetchBinData();
 
-                if (userMeta.pin_setup === true) {
-                    if (cachedPin && cachedTime && (Date.now() - parseInt(cachedTime) < PIN_TIMEOUT_MS)) {
-                        masterPin = cachedPin;
-                        document.getElementById('appScreen').style.display = 'block';
-                        fetchBinData();
-                    } else {
-                        localStorage.removeItem('vault_pin');
-                        localStorage.removeItem('vault_pin_time');
-                        document.getElementById('unlockPinScreen').style.display = 'block';
-                    }
-                } else {
-                    // If no PIN setup, redirect to dashboard to setup PIN
-                    window.location.replace("index.html");
-                }
             } catch (err) { window.location.replace("login.html"); }
         }
 
         initApp();
 
-        const hamburgerBtn = document.getElementById("hamburgerBtn");
-        const mobileMenu = document.getElementById("mobileMenu");
-        hamburgerBtn.addEventListener("click", () => { hamburgerBtn.classList.toggle("active"); mobileMenu.classList.toggle("active"); });
-
-        async function unlockVault() {
-            document.getElementById('unlockPinErr').style.display = 'none';
-            document.getElementById('masterPinInput').classList.remove('error-border');
-            
-            const pinInput = document.getElementById('masterPinInput');
-            const pin = pinInput.value;
-            if(!pin) {
-                document.getElementById('unlockPinErr').innerText = "PIN required";
-                document.getElementById('unlockPinErr').style.display = 'block';
-                pinInput.classList.add('error-border');
-                return;
-            }
-            
-            const btn = document.getElementById('unlockBtn'); btn.disabled = true;
-            try {
-                // Just test decryption with one item to verify PIN
-                const { data, error } = await supabaseClient.from('user_2fa_secrets').select('encrypted_secret').eq('user_id', currentUser).limit(1);
-                if(error) throw error;
-
-                let fail = false;
-                if(data.length > 0) {
-                    try {
-                        const dec = CryptoJS.AES.decrypt(data[0].encrypted_secret, pin).toString(CryptoJS.enc.Utf8);
-                        if(!dec) throw 'err';
-                    } catch(e) { fail = true; }
-                }
-
-                if(fail && data.length > 0) {
-                    document.getElementById('unlockPinErr').innerText = "Incorrect PIN!";
-                    document.getElementById('unlockPinErr').style.display = 'block';
-                    pinInput.classList.add('error-border');
-                } else {
-                    masterPin = pin;
-                    localStorage.setItem('vault_pin', masterPin);
-                    localStorage.setItem('vault_pin_time', Date.now());
-
-                    document.getElementById('unlockPinScreen').style.display = 'none';
-                    document.getElementById('appScreen').style.display = 'block';
-                    fetchBinData();
-                }
-            } catch(err) { 
-                document.getElementById('unlockPinErr').innerText = "Connection Error";
-                document.getElementById('unlockPinErr').style.display = 'block';
-            } 
-            finally { btn.disabled = false; }
-        }
-
         async function fetchBinData() {
             try {
-                // Fetch ONLY deleted items
-                const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser).eq('is_deleted', true);
+                const { data, error } = await supabaseClient.from('user_2fa_secrets')
+                    .select('id, brand, username, deleted_at')
+                    .eq('user_id', currentUser)
+                    .eq('is_deleted', true);
+                
                 if(error) throw error;
                 
-                binAccounts = data.map(row => ({ 
-                    id: row.id, 
-                    brand: row.brand, 
-                    username: row.username
-                    // Secret is not strictly needed just to render the bin, but we have it if needed.
-                }));
+                const now = new Date();
+                const validBinItems = [];
+                const expiredIds = [];
+
+                // Check expired items
+                data.forEach(row => {
+                    let daysLeft = RETENTION_DAYS;
+                    
+                    if (row.deleted_at) {
+                        const delDate = new Date(row.deleted_at);
+                        const diffTime = Math.abs(now - delDate);
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        daysLeft = RETENTION_DAYS - diffDays;
+                    }
+
+                    if (daysLeft <= 0) {
+                        expiredIds.push(row.id); // Time is up, mark for hard delete
+                    } else {
+                        validBinItems.push({ id: row.id, brand: row.brand, username: row.username, daysLeft: daysLeft });
+                    }
+                });
+
+                binAccounts = validBinItems;
+
+                // Auto-delete expired items silently from database
+                if(expiredIds.length > 0) {
+                    await supabaseClient.from('user_2fa_secrets').delete().in('id', expiredIds);
+                    console.log(`Auto-deleted ${expiredIds.length} expired items.`);
+                }
                 
                 renderBin();
             } catch(err) {
@@ -273,11 +212,22 @@
             actionBar.style.display = 'flex';
 
             binAccounts.forEach((acc) => {
+                let badgeClass = 'safe';
+                if(acc.daysLeft <= 7 && acc.daysLeft > 2) badgeClass = 'warning';
+                else if(acc.daysLeft <= 2) badgeClass = 'danger';
+
+                let dayText = acc.daysLeft === 1 ? '1 day left' : `${acc.daysLeft} days left`;
+
                 container.insertAdjacentHTML('beforeend', `
                     <div class="bin-card" id="bin-card-${acc.id}">
                         <div class="bin-top-block">
-                            <span class="acc-brand"><i class="fa-solid fa-tag" style="color:#94a3b8; font-size:0.9rem; margin-right:5px;"></i> ${acc.brand}</span>
-                            <span class="acc-user">${acc.username || 'No username'}</span>
+                            <div class="acc-info">
+                                <span class="acc-brand"><i class="fa-solid fa-tag" style="color:#94a3b8; font-size:0.9rem; margin-right:5px;"></i> ${acc.brand}</span>
+                                <span class="acc-user">${acc.username || 'No username'}</span>
+                            </div>
+                            <div class="days-left-badge ${badgeClass}">
+                                <i class="fa-solid fa-clock"></i> ${dayText}
+                            </div>
                         </div>
                         <div class="bin-action-block">
                             <button class="btn-restore" onclick="restoreAcc('${acc.id}')"><i class="fa-solid fa-rotate-left"></i> Restore</button>
@@ -289,12 +239,17 @@
 
         async function restoreAcc(id) {
             try {
-                // Set is_deleted back to false
-                const { error } = await supabaseClient.from('user_2fa_secrets').update({ is_deleted: false }).eq('id', id);
+                // Remove deleted_at and set is_deleted to false
+                const { error } = await supabaseClient.from('user_2fa_secrets')
+                    .update({ is_deleted: false, deleted_at: null })
+                    .eq('id', id);
                 if (error) throw error;
                 
                 showToast("Code Restored!");
-                fetchBinData(); // Refresh list
+                
+                // Remove from local array and re-render without network call
+                binAccounts = binAccounts.filter(a => a.id !== id);
+                renderBin();
             } catch(e) {
                 showToast("Failed to restore", "error");
             }
@@ -307,7 +262,9 @@
                     if (error) throw error;
                     
                     showToast("Permanently Deleted!");
-                    fetchBinData(); // Refresh list
+                    
+                    binAccounts = binAccounts.filter(a => a.id !== id);
+                    renderBin();
                 } catch(e) {
                     showToast("Failed to delete", "error");
                 }
@@ -325,12 +282,13 @@
                     if (error) throw error;
                     
                     showToast("Bin Emptied Successfully!");
-                    fetchBinData(); // Refresh list
+                    binAccounts = [];
+                    renderBin();
                 } catch(e) {
                     showToast("Failed to empty Bin", "error");
+                } finally {
                     const btn = document.querySelector('.empty-bin-btn');
-                    btn.innerHTML = '<i class="fa-solid fa-dumpster-fire"></i> Empty Bin';
-                    btn.disabled = false;
+                    if(btn) { btn.innerHTML = '<i class="fa-solid fa-dumpster-fire"></i> Empty Bin'; btn.disabled = false; }
                 }
             }
         }
@@ -338,9 +296,7 @@
         function showToast(m, type="success") {
             const t = document.getElementById('toastMsg'); 
             const icon = document.getElementById('toastIcon');
-            
             document.getElementById('toastText').innerText = m; 
-            
             if(type === "error") {
                 t.className = 'toast error show';
                 icon.className = 'fa-solid fa-circle-exclamation';
@@ -350,7 +306,6 @@
                 icon.className = 'fa-solid fa-check-circle';
                 icon.style.color = 'var(--success)';
             }
-            
             setTimeout(() => t.classList.remove('show'), 2000); 
         }
 
