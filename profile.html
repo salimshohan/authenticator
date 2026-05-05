@@ -21,6 +21,7 @@
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -42,11 +43,13 @@
         .hamburger.active span:nth-child(2) { opacity: 0; }
         .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
         
-        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
+        /* --- MOBILE MENU --- */
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; padding-bottom: 20px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
         .mobile-menu.active { right: 0; }
-        .mobile-menu a { color: #333; text-decoration: none; padding: 15px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; }
+        .mobile-menu a { color: #333; text-decoration: none; padding: 12px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; }
         .mobile-menu a i { width: 25px; text-align: center; color: var(--primary); font-size: 18px; }
         .mobile-menu a:hover, .mobile-menu a.active { background: #eff0f0; color: var(--primary); border-left: 4px solid var(--primary); }
+        .menu-section-title { padding: 15px 25px 5px; font-size: 0.75rem; color: #94a3b8; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 
         /* --- LOADING SCREEN --- */
         #loadingScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 100px; text-align: center;}
@@ -71,9 +74,10 @@
         .detail-label { display: block; font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 3px;}
         .detail-text { font-size: 1.05rem; color: var(--text-main); font-weight: 500; word-break: break-word; line-height: 1.4;}
         .detail-text.empty { color: #cbd5e1; font-style: italic; }
+        .join-badge { display: inline-block; background: #e0e7ff; color: var(--primary); font-size: 0.8rem; font-weight: bold; padding: 4px 10px; border-radius: 50px; border: 1px solid #c7d2fe; margin-top: 5px;}
 
         /* --- EDIT MODE INPUTS --- */
-        .input-group { position: relative; text-align: left; margin-bottom: 20px; width: 100%; }
+        .input-group { position: relative; text-align: left; margin-bottom: 25px; width: 100%; }
         .flex-row { display: flex; gap: 10px; } 
         
         .floating-input { position: relative; width: 100%; }
@@ -91,7 +95,7 @@
             background: var(--bg-card); padding: 0 6px; color: #64748b; font-size: 1rem;
             pointer-events: none; transition: 0.2s ease all; display: flex; align-items: center; gap: 6px;
         }
-        .floating-input textarea ~ label { top: 25px; } /* Fix for textarea label */
+        .floating-input textarea ~ label { top: 25px; }
         
         .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label,
         .floating-input textarea:focus ~ label, .floating-input textarea:not(:placeholder-shown) ~ label,
@@ -117,10 +121,10 @@
         .btn-outline:hover:not(:disabled) { background: #f1f5f9; color: var(--text-main); transform: none; box-shadow: none; border-color: #94a3b8;}
 
         /* Toast */
-        .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; transition: 0.4s; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .toast.show { bottom: 30px; }
-        .toast.error { background: var(--danger); }
-        .toast.success { background: var(--success); }
+        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); opacity: 0; padding: 12px 24px; border-radius: 8px; color: white; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; box-shadow: 0 8px 25px rgba(0,0,0,0.2); pointer-events: none; }
+        .toast.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        .toast.success { background: #1f2937; border-left: 4px solid var(--success); }
+        .toast.error { background: #1f2937; border-left: 4px solid var(--danger); }
 
     </style>
 </head>
@@ -128,18 +132,27 @@
 
     <header>
         <a href="index.html" class="brand-logo">
-            <img class="logo-icon" src="https://i.postimg.cc/44VPwf7L/tib-logo.jpg"> The Ironic Bro
+            <img class="logo-icon" src="https://i.postimg.cc/44VPwf7L/tib-logo.jpg" alt="Logo"> The Ironic Bro
         </a>
         <div class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></div>
     </header>
 
     <div class="mobile-menu" id="mobileMenu">
-        <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; font-weight: bold;">VAULT MENU</div>
+        <div class="menu-section-title">Main Vault</div>
         <a href="index.html"><i class="fa-solid fa-house"></i> Dashboard</a>
         <a href="profile.html" class="active"><i class="fa-solid fa-circle-user"></i> My Profile</a>
-        <a href="change-password.html"><i class="fa-solid fa-key"></i> Change Password</a>
+        <a href="bin.html"><i class="fa-solid fa-trash-arrow-up"></i> Recycle Bin</a>
+        <a href="import-export.html"><i class="fa-solid fa-file-export"></i> Import / Export</a>
+        <a href="change-pin.html"><i class="fa-solid fa-lock"></i> Change Master PIN</a>
         <a href="settings.html"><i class="fa-solid fa-gear"></i> App Settings</a>
-        <a onclick="logOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        
+        <div class="menu-section-title">Support & Info</div>
+        <a href="faq.html"><i class="fa-solid fa-clipboard-question"></i> Help & FAQ</a>
+        <a href="about.html"><i class="fa-solid fa-circle-info"></i> About App</a>
+        
+        <div style="margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 5px;">
+            <a onclick="logOut()" style="color: var(--danger);"><i class="fa-solid fa-right-from-bracket"></i> Logout Securely</a>
+        </div>
     </div>
 
     <div class="container">
@@ -154,6 +167,9 @@
                 <div class="profile-avatar"><i class="fa-solid fa-user-astronaut"></i></div>
                 <h2 class="primary-text" id="displayTitle">My Profile</h2>
                 <p class="subtitle" id="displaySubtitle">Manage your personal information.</p>
+                <div id="joinBadgeWrapper" style="display:none;">
+                    <span class="join-badge"><i class="fa-solid fa-calendar-check"></i> Joined: <span id="viewJoined">...</span></span>
+                </div>
             </div>
 
             <div id="viewMode">
@@ -161,6 +177,10 @@
                     <div class="detail-item">
                         <i class="fa-solid fa-id-card detail-icon"></i>
                         <div class="detail-content"><label class="detail-label">Full Name</label><span class="detail-text" id="viewName">Loading...</span></div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fa-solid fa-mask detail-icon"></i>
+                        <div class="detail-content"><label class="detail-label">Nickname</label><span class="detail-text" id="viewNickname">Loading...</span></div>
                     </div>
                     <div class="detail-item">
                         <i class="fa-solid fa-briefcase detail-icon"></i>
@@ -183,8 +203,8 @@
                         <div class="detail-content"><label class="detail-label">Location</label><span class="detail-text" id="viewLocation">Loading...</span></div>
                     </div>
                     <div class="detail-item">
-                        <i class="fa-brands fa-github detail-icon" style="color:#333;"></i>
-                        <div class="detail-content"><label class="detail-label">Website / Link</label><span class="detail-text" id="viewLink">Loading...</span></div>
+                        <i class="fa-brands fa-facebook detail-icon" style="color:#1877F2;"></i>
+                        <div class="detail-content"><label class="detail-label">Facebook Profile</label><span class="detail-text" id="viewFbLink">Loading...</span></div>
                     </div>
                     <div class="detail-item">
                         <i class="fa-solid fa-quote-left detail-icon"></i>
@@ -198,6 +218,10 @@
                 
                 <div class="input-group">
                     <div class="floating-input"><input type="text" id="nameInput" placeholder=" "><label><i class="fa-solid fa-id-card"></i> Full Name</label></div>
+                </div>
+
+                <div class="input-group">
+                    <div class="floating-input"><input type="text" id="nicknameInput" placeholder=" "><label><i class="fa-solid fa-mask"></i> Nickname</label></div>
                 </div>
 
                 <div class="input-group">
@@ -256,7 +280,7 @@
                 </div>
 
                 <div class="input-group">
-                    <div class="floating-input"><input type="url" id="linkInput" placeholder=" "><label><i class="fa-solid fa-link"></i> Website / GitHub Link</label></div>
+                    <div class="floating-input"><input type="url" id="fbLinkInput" placeholder=" "><label><i class="fa-brands fa-facebook"></i> Facebook Profile Link</label></div>
                 </div>
 
                 <div class="input-group">
@@ -269,14 +293,13 @@
         </div>
     </div>
 
-    <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText"></span></div>
+    <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-check-circle" style="color:var(--success)"></i> <span id="toastText"></span></div>
 
     <script>
         let supabaseClient;
         let currentUser = null;
-        let userDataCache = {}; // Store data locally to toggle back without re-fetching
+        let userDataCache = {}; 
 
-        // --- Core Init Logic ---
         async function initApp() {
             const fallbackTimeout = setTimeout(() => {
                 const ls = document.getElementById('loadingScreen');
@@ -304,6 +327,9 @@
                 currentUser = data.user;
                 userDataCache = currentUser.user_metadata || {};
                 userDataCache.email = currentUser.email;
+                
+                // Set creation date
+                userDataCache.created_at = currentUser.created_at;
 
                 populateData(userDataCache);
 
@@ -318,15 +344,14 @@
 
         initApp();
 
-        // --- Menu Logic ---
         const hamburgerBtn = document.getElementById("hamburgerBtn");
         const mobileMenu = document.getElementById("mobileMenu");
         hamburgerBtn.addEventListener("click", () => { hamburgerBtn.classList.toggle("active"); mobileMenu.classList.toggle("active"); });
 
-        // --- Populate Data into View & Form ---
         function populateData(meta) {
             // Fill Form Inputs
             document.getElementById('nameInput').value = meta.full_name || '';
+            document.getElementById('nicknameInput').value = meta.nickname || '';
             document.getElementById('emailInput').value = meta.email || '';
             document.getElementById('profInput').value = meta.profession || '';
             document.getElementById('dobInput').value = meta.dob || '';
@@ -334,17 +359,26 @@
             document.getElementById('phoneInput').value = meta.phone || '';
             document.getElementById('cityInput').value = meta.city || '';
             document.getElementById('countryInput').value = meta.country || '';
-            document.getElementById('linkInput').value = meta.link || '';
+            document.getElementById('fbLinkInput').value = meta.fb_link || '';
             document.getElementById('bioInput').value = meta.bio || '';
             
             const gInput = document.getElementById('genderInput');
             if(meta.gender) { gInput.value = meta.gender; gInput.classList.add('has-val'); } 
             else { gInput.value = ''; gInput.classList.remove('has-val'); }
 
-            // Fill View Mode
+            // Formatted View Function
             const formatView = (val) => val ? val : '<span class="empty">Not set</span>';
             
+            // Handle Join Date parsing
+            if(meta.created_at) {
+                const d = new Date(meta.created_at);
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                document.getElementById('viewJoined').innerText = d.toLocaleDateString('en-US', options);
+                document.getElementById('joinBadgeWrapper').style.display = 'block';
+            }
+
             document.getElementById('viewName').innerHTML = formatView(meta.full_name);
+            document.getElementById('viewNickname').innerHTML = formatView(meta.nickname);
             document.getElementById('viewEmail').innerText = meta.email;
             document.getElementById('viewProf').innerHTML = formatView(meta.profession);
             document.getElementById('viewDob').innerHTML = formatView(meta.dob);
@@ -355,11 +389,10 @@
             if(meta.country) loc.push(meta.country);
             document.getElementById('viewLocation').innerHTML = loc.length > 0 ? loc.join(', ') : '<span class="empty">Not set</span>';
             
-            document.getElementById('viewLink').innerHTML = meta.link ? `<a href="${meta.link}" target="_blank" style="color:var(--primary); text-decoration:none;">${meta.link}</a>` : '<span class="empty">Not set</span>';
+            document.getElementById('viewFbLink').innerHTML = meta.fb_link ? `<a href="${meta.fb_link}" target="_blank" style="color:#1877F2; text-decoration:none; font-weight:bold;">View Profile <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8rem;"></i></a>` : '<span class="empty">Not set</span>';
             document.getElementById('viewBio').innerHTML = formatView(meta.bio);
         }
 
-        // --- Toggle Edit Mode ---
         function toggleEditMode(showEdit) {
             const viewMode = document.getElementById('viewMode');
             const editMode = document.getElementById('editMode');
@@ -373,7 +406,6 @@
                 sub.innerText = "Update your details below.";
                 document.getElementById('nameInput').focus();
             } else {
-                // Cancelled: Reset form values back to cached data
                 populateData(userDataCache);
                 viewMode.style.display = 'block';
                 editMode.style.display = 'none';
@@ -382,7 +414,6 @@
             }
         }
 
-        // --- Save Profile ---
         async function saveProfile() {
             const nameInput = document.getElementById('nameInput');
             const newName = nameInput.value.trim();
@@ -397,9 +428,10 @@
             btn.disabled = true; btnIcon.className = "fa-solid fa-circle-notch fa-spin"; btnText.innerText = "Saving...";
 
             try {
-                // Collect Metadata
+                // Prepare Meta Data
                 const metaData = {
                     full_name: newName,
+                    nickname: document.getElementById('nicknameInput').value.trim(),
                     profession: document.getElementById('profInput').value.trim(),
                     dob: document.getElementById('dobInput').value,
                     dial_code: document.getElementById('dialCodeInput').value.trim(),
@@ -407,22 +439,21 @@
                     gender: document.getElementById('genderInput').value,
                     city: document.getElementById('cityInput').value.trim(),
                     country: document.getElementById('countryInput').value.trim(),
-                    link: document.getElementById('linkInput').value.trim(),
+                    fb_link: document.getElementById('fbLinkInput').value.trim(),
                     bio: document.getElementById('bioInput').value.trim()
                 };
 
-                // Clean empty
                 if(!metaData.gender) delete metaData.gender;
 
                 const { data, error } = await supabaseClient.auth.updateUser({ data: metaData });
                 if (error) throw error;
 
-                // Update Cache and View
+                // Update Cache and Switch back
                 userDataCache = { ...userDataCache, ...metaData };
                 populateData(userDataCache);
                 
-                showToast("Profile updated successfully!", "success");
-                toggleEditMode(false); // Back to View Mode
+                showToast("Profile updated successfully!");
+                toggleEditMode(false);
 
             } catch (error) {
                 showToast("Failed to update profile.", "error");
@@ -435,8 +466,16 @@
         function showToast(m, type="success") {
             const t = document.getElementById('toastMsg'), icon = document.getElementById('toastIcon');
             document.getElementById('toastText').innerText = m;
-            t.className = `toast show ${type}`;
-            if(type === "error") icon.className = "fa-solid fa-circle-exclamation"; else icon.className = "fa-solid fa-circle-check";
+            
+            if(type === "error") {
+                t.className = 'toast error show';
+                icon.className = "fa-solid fa-circle-exclamation";
+                icon.style.color = "var(--danger)";
+            } else {
+                t.className = 'toast success show';
+                icon.className = "fa-solid fa-check-circle";
+                icon.style.color = "var(--success)";
+            }
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
