@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile | The Ironic Bro</title>
+    <title>My Profile | IB 2FA Vault</title>
     
     <script>
         window.onerror = function(msg, url, line) {
@@ -33,9 +33,9 @@
         .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 
         /* --- HEADER STYLES --- */
-        header { width: 100%; background: linear-gradient(90deg, #564ad3, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        header { width: 100%; background: linear-gradient(90deg, #4f46e5, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; color: white; text-transform: uppercase; text-decoration: none; }
-        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; }
+        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; font-weight: 900;}
         .hamburger { cursor: pointer; width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; z-index: 2001; background: rgba(255, 255, 255, 0.15); border-radius: 8px; transition: 0.3s; }
         .hamburger:hover { background: rgba(255, 255, 255, 0.25); }
         .hamburger span { display: block; height: 3px; width: 24px; background: white; border-radius: 2px; transition: 0.3s; }
@@ -132,7 +132,7 @@
 
     <header>
         <a href="index.html" class="brand-logo">
-            <img class="logo-icon" src="https://i.postimg.cc/44VPwf7L/tib-logo.jpg" alt="Logo"> The Ironic Bro
+            <div class="logo-icon">IB</div> 2FA Vault
         </a>
         <div class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></div>
     </header>
@@ -236,25 +236,10 @@
                     </div>
                 </div>
 
-                <div class="input-group flex-row">
-                    <div class="floating-input" style="flex: 0 0 130px;">
-                        <input type="text" id="dialCodeInput" list="dialCodes" placeholder=" ">
-                        <label>Code</label>
-                        <datalist id="dialCodes">
-                            <option value="+880">Bangladesh</option>
-                            <option value="+91">India</option>
-                            <option value="+1">USA/Canada</option>
-                            <option value="+44">UK</option>
-                            <option value="+92">Pakistan</option>
-                            <option value="+971">UAE</option>
-                            <option value="+966">Saudi Arabia</option>
-                            <option value="+60">Malaysia</option>
-                            <option value="+61">Malaysia</option>
-                            <option value="+65">Australia</option>
-                        </datalist>
-                    </div>
-                    <div class="floating-input" style="flex: 1;">
-                        <input type="tel" id="phoneInput" placeholder=" "><label><i class="fa-solid fa-phone"></i> Phone Number</label>
+                <div class="input-group">
+                    <div class="floating-input">
+                        <input type="tel" id="phoneInput" placeholder=" ">
+                        <label><i class="fa-solid fa-phone"></i> Phone Number (e.g., +8801...)</label>
                     </div>
                 </div>
 
@@ -349,14 +334,19 @@
         hamburgerBtn.addEventListener("click", () => { hamburgerBtn.classList.toggle("active"); mobileMenu.classList.toggle("active"); });
 
         function populateData(meta) {
+            // Handle backward compatibility for old data that might have separate dial_code
+            let fullPhone = meta.phone || '';
+            if (meta.dial_code && !fullPhone.startsWith('+')) {
+                fullPhone = meta.dial_code + ' ' + fullPhone;
+            }
+
             // Fill Form Inputs
             document.getElementById('nameInput').value = meta.full_name || '';
             document.getElementById('nicknameInput').value = meta.nickname || '';
             document.getElementById('emailInput').value = meta.email || '';
             document.getElementById('profInput').value = meta.profession || '';
+            document.getElementById('phoneInput').value = fullPhone;
             document.getElementById('dobInput').value = meta.dob || '';
-            document.getElementById('dialCodeInput').value = meta.dial_code || '';
-            document.getElementById('phoneInput').value = meta.phone || '';
             document.getElementById('cityInput').value = meta.city || '';
             document.getElementById('countryInput').value = meta.country || '';
             document.getElementById('fbLinkInput').value = meta.fb_link || '';
@@ -382,7 +372,7 @@
             document.getElementById('viewEmail').innerText = meta.email;
             document.getElementById('viewProf').innerHTML = formatView(meta.profession);
             document.getElementById('viewDob').innerHTML = formatView(meta.dob);
-            document.getElementById('viewPhone').innerHTML = meta.phone ? `${meta.dial_code || ''} ${meta.phone}` : '<span class="empty">Not set</span>';
+            document.getElementById('viewPhone').innerHTML = fullPhone ? fullPhone : '<span class="empty">Not set</span>';
             
             let loc = [];
             if(meta.city) loc.push(meta.city);
@@ -434,13 +424,14 @@
                     nickname: document.getElementById('nicknameInput').value.trim(),
                     profession: document.getElementById('profInput').value.trim(),
                     dob: document.getElementById('dobInput').value,
-                    dial_code: document.getElementById('dialCodeInput').value.trim(),
                     phone: document.getElementById('phoneInput').value.trim(),
                     gender: document.getElementById('genderInput').value,
                     city: document.getElementById('cityInput').value.trim(),
                     country: document.getElementById('countryInput').value.trim(),
                     fb_link: document.getElementById('fbLinkInput').value.trim(),
-                    bio: document.getElementById('bioInput').value.trim()
+                    bio: document.getElementById('bioInput').value.trim(),
+                    // setting dial_code to null or undefined since we combined them
+                    dial_code: null 
                 };
 
                 if(!metaData.gender) delete metaData.gender;
