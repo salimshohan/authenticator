@@ -57,7 +57,6 @@
         .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
         .floating-input input.error-border { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
         .floating-input input.error-border ~ label { color: var(--danger) !important; }
-        .error-text { color: var(--danger); font-size: 0.8rem; font-weight: 600; margin-top: 6px; display: none; padding-left: 5px;}
 
         /* Buttons */
         .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 10px;}
@@ -66,6 +65,9 @@
 
         /* --- SCREEN LOGIC --- */
         #pinScreen, #appScreen { display: none; }
+        
+        /* Preloader */
+        #pageLoader { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 0; color: var(--primary); font-weight: bold;}
 
         /* --- 2FA APP SPECIFIC UI --- */
         .timer-box { background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
@@ -120,10 +122,15 @@
 
     <div class="container">
         
+        <div id="pageLoader">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; margin-bottom: 10px;"></i>
+            <p>Connecting to Vault...</p>
+        </div>
+
         <div class="card" id="pinScreen">
             <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 15px;"></i>
             <h2>Vault Locked</h2>
-            <p class="subtitle">Enter your Master PIN to decrypt your 2FA keys.</p>
+            <p class="subtitle">Enter your Master PIN to decrypt your keys.</p>
 
             <div class="input-group">
                 <div class="floating-input">
@@ -221,15 +228,28 @@
 
         let masterPin = null, accounts = [], currentUser = null, timerInterval;
 
-        // --- App Init & Auth Guard ---
+        // --- FIXED: App Init & Auth Guard ---
         document.addEventListener('DOMContentLoaded', async () => {
-            const { data } = await supabaseClient.auth.getSession();
-            if (!data.session) {
-                // Kick back to login if no session
-                window.location.href = "login.html";
-            } else {
-                currentUser = data.session.user.id;
-                document.getElementById('pinScreen').style.display = 'block';
+            try {
+                const { data, error } = await supabaseClient.auth.getSession();
+                
+                // Hide Loader
+                document.getElementById('pageLoader').style.display = 'none';
+
+                if (error) throw error; // Catch network/CORS issues
+
+                if (!data || !data.session) {
+                    // Kick back to login if no session
+                    window.location.href = "login.html";
+                } else {
+                    // Session Found! Show PIN Screen
+                    currentUser = data.session.user.id;
+                    document.getElementById('pinScreen').style.display = 'block';
+                }
+            } catch (err) {
+                console.error("Session fetch error:", err);
+                showToast("Connection issue! Redirecting to login...", "error");
+                setTimeout(() => window.location.href = "login.html", 2000);
             }
         });
 
@@ -283,7 +303,6 @@
 
             const enc = CryptoJS.AES.encrypt(secret, masterPin).toString();
             
-            // Insert with user_id
             const { data, error } = await supabaseClient.from('user_2fa_secrets')
                 .insert([{user_id: currentUser, brand: brand, username: user, encrypted_secret: enc}])
                 .select();
