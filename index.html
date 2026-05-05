@@ -45,7 +45,7 @@
         .loading-subtext { color: #64748b; font-size: 0.9rem;}
 
         /* --- APP CONTAINERS & CARDS --- */
-        .container { width: 100%; max-width: 500px; padding: 20px; flex: 1; margin-bottom: 40px;}
+        .container { width: 100%; max-width: 500px; padding: 20px; flex: 1; margin-bottom: 80px;} /* Extra margin for floating timer */
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border: 1px solid var(--border); }
         h2 { color: var(--text-main); margin-top: 0; margin-bottom: 5px; }
         .primary-text { color: var(--primary) !important; font-weight: 700; }
@@ -81,31 +81,55 @@
         /* --- SCREEN LOGIC --- */
         #pinScreen, #appScreen { display: none; }
 
-        /* --- 2FA APP UI (EXACT MATCH) --- */
-        .timer-box { background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-        .progress-bar { height: 6px; background: var(--success); width: 100%; transition: width 1s linear; border-radius: 10px; margin-top: 8px;}
-        .progress-bar.danger { background: var(--danger); }
+        /* --- 2FA APP UI --- */
         
+        /* Floating Circle Timer */
+        .floating-timer {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 55px;
+            height: 55px;
+            background: var(--bg-card);
+            border: 4px solid var(--success);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        .floating-timer span { margin-left: 1px; font-size: 0.7rem; font-weight: 700; color: #64748b;}
+        .floating-timer.danger { border-color: var(--danger); color: var(--danger); }
+        .floating-timer.danger span { color: var(--danger); }
+
         .global-edit-btn { background: none; border: none; color: var(--text-muted); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-left: auto; margin-bottom: 15px; padding: 5px 10px; border-radius: 5px; transition: 0.2s;}
         .global-edit-btn:hover { background: #f1f5f9; color: var(--primary); }
 
         .acc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); transition: 0.2s; overflow: hidden; display: flex; flex-direction: column;}
         .acc-card:hover { border-color: var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.08);}
         
-        /* Main Code Area (Clickable for copy) */
-        .acc-main { display: flex; justify-content: space-between; align-items: center; padding: 20px; cursor: pointer; transition: 0.2s; }
-        .acc-main:hover { background: #fafafa; }
-        .acc-info { display: flex; flex-direction: column; text-align: left; max-width: 45%;}
-        .acc-brand { font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px; word-break: break-all;}
-        .acc-user { font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 5px; word-break: break-all;}
+        /* Main Code Area - Fix for Long Texts */
+        .acc-main { display: flex; justify-content: space-between; align-items: center; padding: 20px;}
+        .acc-info { display: flex; flex-direction: column; text-align: left; flex: 1; min-width: 0; padding-right: 15px; } /* min-width: 0 is required for text overflow in flexbox */
         
-        .code-wrapper { display: flex; flex-direction: column; align-items: flex-end;}
-        .code-text { font-size: 2.3rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; font-family: monospace; line-height: 1;}
-        .next-code-area { display: flex; align-items: center; gap: 5px; margin-top: 5px;}
+        .acc-brand { font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .acc-user { font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .code-wrapper { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0;} /* Prevent shrinking */
+        .code-text { font-size: 2.3rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; font-family: monospace; line-height: 1; cursor: pointer; transition: 0.2s;}
+        .code-text:hover { opacity: 0.7; }
+        
+        .next-code-area { display: flex; align-items: center; gap: 5px; margin-top: 5px; cursor: pointer; transition: 0.2s;}
+        .next-code-area:hover { opacity: 0.7; }
         .next-code-label { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: bold;}
         .next-code-text { font-size: 1.1rem; color: #94a3b8; font-family: monospace; letter-spacing: 1px;}
 
-        /* Edit Controls (Hidden by default) */
+        /* Edit Controls */
         .acc-edit-controls { background: #f8fafc; border-top: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: flex-end; align-items: center; gap: 15px; display: none; }
         .acc-edit-controls.active { display: flex; }
         
@@ -117,6 +141,10 @@
         .btn-action.edit:hover { color: var(--primary); transform: scale(1.1);}
         .btn-action.delete:hover { color: var(--danger); transform: scale(1.1);}
         
+        /* Sticky Reset Button (Moved to Left to avoid Timer) */
+        .sticky-reset { position: fixed; bottom: 30px; left: 30px; width: 55px; height: 55px; background: var(--bg-card); color: var(--danger); border: 2px solid #fee2e2; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; cursor: pointer; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s;}
+        .sticky-reset:hover { background: #fee2e2; transform: translateY(-5px) scale(1.05); }
+
         /* Toast Notification */
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .toast.show { bottom: 30px; }
@@ -139,6 +167,7 @@
     <div class="mobile-menu" id="mobileMenu">
         <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Main Menu</div>
         <a href="index.html" class="active"><i class="fa-solid fa-shield-halved"></i> 2FA Vault</a>
+        <a href="password-generator.html"><i class="fa-solid fa-key"></i> Password Generator</a>
         
         <div style="padding: 20px 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Account</div>
         <a href="profile.html"><i class="fa-solid fa-circle-user"></i> Profile</a>
@@ -179,8 +208,8 @@
 
         <div id="appScreen">
             <div class="card" style="padding: 25px 20px;" id="addFormCard">
-                <h3 style="margin-top:0; color: var(--text-main); text-align: left; margin-bottom: 20px;" id="formTitle">
-                    <i class="fa-solid fa-circle-plus" style="color:var(--primary);"></i> Add Authenticator
+                <h3 class="primary-text" style="margin-top:0; text-align: left; margin-bottom: 20px;" id="formTitle">
+                    <i class="fa-solid fa-circle-plus"></i> Add Authenticator
                 </h3>
                 
                 <div class="input-group">
@@ -207,15 +236,7 @@
                 <button class="btn" id="addBtn" onclick="saveSecret()">
                     <i class="fa-solid fa-floppy-disk" id="addIcon"></i> <span id="addText">Save Securely</span>
                 </button>
-                <div style="font-size:0.8rem; margin-top:10px; color:var(--text-muted); text-align: center;" id="slotCounter">Slots available: 50/50</div>
-            </div>
-
-            <div class="timer-box" id="timerBox" style="display: none;">
-                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:0.85rem; color:var(--text-main);">
-                    <span><i class="fa-solid fa-stopwatch"></i> Codes valid for:</span>
-                    <span id="countdownText">30s</span>
-                </div>
-                <div class="progress-bar" id="progressBar"></div>
+                <div style="font-size:0.8rem; margin-top:10px; color:var(--text-muted); text-align: center;" id="slotCounter">Slots available: 100/100</div>
             </div>
 
             <div id="editToggleArea" style="display: none;">
@@ -227,6 +248,14 @@
             <div id="accountsContainer"></div>
         </div>
     </div>
+
+    <div class="floating-timer" id="floatingTimer" style="display: none;">
+        <div id="floatingTimerNum">30</div><span>s</span>
+    </div>
+
+    <button class="sticky-reset" id="resetBtn" onclick="resetAllWarning()" title="Delete All Data" style="display: none;">
+        <i class="fa-solid fa-trash-can"></i>
+    </button>
 
     <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText">Message</span></div>
 
@@ -264,7 +293,8 @@
 
         let masterPin = null, accounts = [], currentUser = null, timerInterval;
         let isEditMode = false;
-        let editingId = null; // null if adding new, or holds ID if editing
+        let editingId = null; 
+        const MAX_SLOTS = 100; // Updated limit
 
         // --- App Init ---
         window.onload = async function() {
@@ -293,7 +323,6 @@
             btn.disabled = true; btnIcon.className = "fa-solid fa-circle-notch fa-spin"; btnText.innerText = "Decrypting...";
             
             try {
-                // Order by created_at so they appear in order of creation (or local reorder logic)
                 const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser).order('created_at', { ascending: true });
                 if(error) throw error;
 
@@ -314,6 +343,7 @@
                     showToast("Vault Unlocked!");
                     document.getElementById('pinScreen').style.display = 'none'; 
                     document.getElementById('appScreen').style.display = 'block';
+                    document.getElementById('resetBtn').style.display = 'flex';
                     renderAccounts(); 
                 }
             } catch (error) {
@@ -324,7 +354,7 @@
         }
 
         async function saveSecret() {
-            if(accounts.length >= 50 && !editingId) return showToast("Maximum 50 slots allowed!", "error");
+            if(accounts.length >= MAX_SLOTS && !editingId) return showToast(`Maximum ${MAX_SLOTS} slots allowed!`, "error");
             
             const brandInput = document.getElementById('brandInput');
             const secretInput = document.getElementById('secretKeyInput');
@@ -346,52 +376,35 @@
                 return showToast("Invalid Base32 Secret Key format!", "error"); 
             }
 
-            const btn = document.getElementById('addBtn');
-            const btnIcon = document.getElementById('addIcon');
-            const btnText = document.getElementById('addText');
+            const btn = document.getElementById('addBtn'), btnIcon = document.getElementById('addIcon'), btnText = document.getElementById('addText');
             btn.disabled = true; btnIcon.className = "fa-solid fa-circle-notch fa-spin"; btnText.innerText = "Saving...";
 
             const enc = CryptoJS.AES.encrypt(secret, masterPin).toString();
             
             try {
                 if (editingId) {
-                    // Update existing
                     const { error } = await supabaseClient.from('user_2fa_secrets')
-                        .update({ brand: brand, username: user, encrypted_secret: enc })
-                        .eq('id', editingId);
+                        .update({ brand: brand, username: user, encrypted_secret: enc }).eq('id', editingId);
                     if(error) throw error;
                     
-                    // Update local array
                     const index = accounts.findIndex(a => a.id === editingId);
-                    if(index !== -1) {
-                        accounts[index].brand = brand;
-                        accounts[index].username = user;
-                        accounts[index].secret = secret;
-                    }
+                    if(index !== -1) { accounts[index].brand = brand; accounts[index].username = user; accounts[index].secret = secret; }
                     showToast("Authenticator updated!");
                     resetFormUI();
                 } else {
-                    // Insert new
                     const { data, error } = await supabaseClient.from('user_2fa_secrets')
-                        .insert([{user_id: currentUser, brand: brand, username: user, encrypted_secret: enc}])
-                        .select();
+                        .insert([{user_id: currentUser, brand: brand, username: user, encrypted_secret: enc}]).select();
                     if(error) throw error;
-
                     accounts.push({id: data[0].id, brand: brand, username: user, secret: secret});
                     showToast("Saved securely to cloud!");
                     document.getElementById('brandInput').value = ''; document.getElementById('userInput').value = ''; document.getElementById('secretKeyInput').value = '';
                 }
-                
                 renderAccounts();
-            } catch (error) {
-                showToast("Failed to save data.", "error");
-            } finally {
+            } catch (error) { showToast("Failed to save data.", "error"); } 
+            finally {
                 btn.disabled = false; 
-                if(!editingId){
-                    btnIcon.className = "fa-solid fa-floppy-disk"; btnText.innerText = "Save Securely";
-                } else {
-                    btnIcon.className = "fa-solid fa-pen"; btnText.innerText = "Update Authenticator";
-                }
+                if(!editingId){ btnIcon.className = "fa-solid fa-floppy-disk"; btnText.innerText = "Save Securely"; } 
+                else { btnIcon.className = "fa-solid fa-pen"; btnText.innerText = "Update Authenticator"; }
             }
         }
 
@@ -417,14 +430,11 @@
             document.getElementById('secretKeyInput').value = acc.secret;
             editingId = acc.id;
 
-            // Change UI to Update mode
-            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen" style="color:var(--success);"></i> Update Authenticator';
+            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen" style="color:var(--success);"></i> <span class="primary-text">Update Authenticator</span>';
             const addBtn = document.getElementById('addBtn');
             addBtn.classList.add('btn-update');
             document.getElementById('addIcon').className = "fa-solid fa-pen";
             document.getElementById('addText').innerText = "Update Authenticator";
-            
-            // Scroll to form
             document.getElementById('addFormCard').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -433,7 +443,7 @@
             document.getElementById('brandInput').value = '';
             document.getElementById('userInput').value = '';
             document.getElementById('secretKeyInput').value = '';
-            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-circle-plus" style="color:var(--primary);"></i> Add Authenticator';
+            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-circle-plus"></i> <span class="primary-text">Add Authenticator</span>';
             const addBtn = document.getElementById('addBtn');
             addBtn.classList.remove('btn-update');
             document.getElementById('addIcon').className = "fa-solid fa-floppy-disk";
@@ -442,34 +452,28 @@
 
         function moveUp(index) {
             if (index > 0) {
-                let temp = accounts[index];
-                accounts[index] = accounts[index - 1];
-                accounts[index - 1] = temp;
-                renderAccounts();
-                showToast("Order changed locally.");
+                let temp = accounts[index]; accounts[index] = accounts[index - 1]; accounts[index - 1] = temp;
+                renderAccounts(); showToast("Order changed locally.");
             }
         }
 
         function moveDown(index) {
             if (index < accounts.length - 1) {
-                let temp = accounts[index];
-                accounts[index] = accounts[index + 1];
-                accounts[index + 1] = temp;
-                renderAccounts();
-                showToast("Order changed locally.");
+                let temp = accounts[index]; accounts[index] = accounts[index + 1]; accounts[index + 1] = temp;
+                renderAccounts(); showToast("Order changed locally.");
             }
         }
 
         function renderAccounts() {
             const container = document.getElementById('accountsContainer');
             container.innerHTML = '';
-            document.getElementById('slotCounter').innerText = `Slots available: ${50 - accounts.length}/50`;
+            document.getElementById('slotCounter').innerText = `Slots available: ${MAX_SLOTS - accounts.length}/${MAX_SLOTS}`;
             
             if(accounts.length > 0) {
-                document.getElementById('timerBox').style.display = 'block';
+                document.getElementById('floatingTimer').style.display = 'flex';
                 document.getElementById('editToggleArea').style.display = 'flex';
             } else {
-                document.getElementById('timerBox').style.display = 'none';
+                document.getElementById('floatingTimer').style.display = 'none';
                 document.getElementById('editToggleArea').style.display = 'none';
                 isEditMode = false;
             }
@@ -482,21 +486,21 @@
                             <button onclick="moveUp(${i})" title="Move Up"><i class="fa-solid fa-chevron-up"></i></button>
                             <button onclick="moveDown(${i})" title="Move Down"><i class="fa-solid fa-chevron-down"></i></button>
                         </div>
-                        <button class="btn-action edit" onclick="triggerEdit(${i})" title="Edit Details"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action edit" onclick="triggerEdit(${i})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
                         <button class="btn-action delete" onclick="delAcc('${acc.id}', ${i})" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 ` : '';
 
                 container.insertAdjacentHTML('beforeend', `
                     <div class="acc-card">
-                        <div class="acc-main no-select" onclick="copyCode('code-${i}')" title="Tap to copy">
+                        <div class="acc-main no-select">
                             <div class="acc-info">
                                 <div class="acc-brand">${acc.brand}</div>
                                 ${userHtml}
                             </div>
                             <div class="code-wrapper">
-                                <div class="code-text" id="code-${i}">--- ---</div>
-                                <div class="next-code-area">
+                                <div class="code-text" id="code-${i}" onclick="copyCode('code-${i}', false)" title="Tap to copy current code">--- ---</div>
+                                <div class="next-code-area" onclick="copyCode('next-code-${i}', true)" title="Tap to copy next code">
                                     <div class="next-code-label">Next Code:</div>
                                     <div class="next-code-text" id="next-code-${i}">--- ---</div>
                                 </div>
@@ -515,18 +519,16 @@
             let epoch = Math.floor(Date.now() / 1000);
             let rem = 30 - (epoch % 30);
             
-            document.getElementById('countdownText').innerText = rem + "s";
-            let bar = document.getElementById('progressBar');
-            bar.style.width = (rem/30*100) + "%";
-            rem <= 5 ? bar.classList.add('danger') : bar.classList.remove('danger');
+            // Update Floating Timer
+            let floatingTimer = document.getElementById('floatingTimer');
+            document.getElementById('floatingTimerNum').innerText = rem;
+            rem <= 5 ? floatingTimer.classList.add('danger') : floatingTimer.classList.remove('danger');
 
             accounts.forEach((acc, i) => {
                 try {
                     let totp = new OTPAuth.TOTP({secret: OTPAuth.Secret.fromBase32(acc.secret)});
-                    
                     let c = totp.generate();
                     let el = document.getElementById(`code-${i}`);
-                    
                     let nextC = totp.generate({timestamp: epoch + 30}); 
                     let nextEl = document.getElementById(`next-code-${i}`);
 
@@ -534,9 +536,7 @@
                         el.innerText = c.slice(0,3) + ' ' + c.slice(3);
                         el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)';
                     }
-                    if(nextEl) {
-                        nextEl.innerText = nextC.slice(0,3) + ' ' + nextC.slice(3);
-                    }
+                    if(nextEl) { nextEl.innerText = nextC.slice(0,3) + ' ' + nextC.slice(3); }
                 } catch(e){}
             });
         }
@@ -547,33 +547,31 @@
                 const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('id', id);
                 if(error) throw error;
                 accounts.splice(index, 1); 
-                if(editingId === id) resetFormUI(); // Cancel edit if deleted
+                if(editingId === id) resetFormUI(); 
                 renderAccounts(); 
                 showToast("Deleted successfully!");
-            } catch(e) {
-                showToast("Failed to delete.", "error");
-            }
+            } catch(e) { showToast("Failed to delete.", "error"); }
         }
 
         async function resetAllWarning() {
-            if(!confirm("⚠️ WARNING: This will PERMANENTLY DELETE all your data from the cloud! You will have to setup a new Master PIN and add all codes manually again. Proceed?")) return;
-            if(!confirm("LAST WARNING: Are you absolutely sure?")) return;
+            if(!confirm("⚠️ WARNING: This action is permanent! ALL your 2FA codes will be deleted from the cloud. You will need to setup a new Master PIN and manually re-add ALL your authenticators.\n\nAre you sure you want to delete all data?")) return;
+            if(!confirm("LAST WARNING: Final confirmation. Are you absolutely sure?")) return;
             
             try {
                 const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('user_id', currentUser);
                 if(error) throw error;
-                showToast("All data cleared! Please set up a new account."); 
-                setTimeout(() => window.location.replace("signup.html"), 2000); 
+                showToast("All data cleared! Redirecting to setup."); 
+                setTimeout(() => window.location.replace("signup.html"), 1500); 
             } catch(e) { showToast("Failed to clear data.", "error"); }
         }
 
-        function copyCode(id) {
-            if(isEditMode) return; // Prevent copying if just clicking around in edit mode
+        function copyCode(id, isNext = false) {
+            if(isEditMode) return;
             let el = document.getElementById(id);
             if(!el) return;
-            let txt = el.innerText.replace(' ','');
+            let txt = el.innerText.replace(/\s+/g, '');
             if(txt === "------" || txt === "") return;
-            navigator.clipboard.writeText(txt).then(() => showToast("Code Copied to Clipboard!"));
+            navigator.clipboard.writeText(txt).then(() => showToast(isNext ? "Next Code Copied!" : "Current Code Copied!"));
         }
 
         async function logOut() {
