@@ -22,6 +22,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
         /* --- GLOBAL STYLES --- */
@@ -67,15 +68,33 @@
         .action-title { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;}
         .action-desc { font-size: 0.85rem; color: #64748b; line-height: 1.5; margin-bottom: 20px;}
 
+        /* --- INPUTS --- */
+        .input-group { position: relative; text-align: left; margin-bottom: 15px; width: 100%; }
+        .floating-input { position: relative; width: 100%; }
+        .floating-input input {
+            width: 100%; padding: 14px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.95rem;
+            background: transparent; color: var(--text-main); transition: 0.3s;
+        }
+        .floating-input label {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            background: var(--bg-card); padding: 0 6px; color: #64748b; font-size: 0.9rem;
+            pointer-events: none; transition: 0.2s ease all; display: flex; align-items: center; gap: 6px;
+        }
+        .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.75rem; color: var(--primary); font-weight: 600; }
+        .floating-input input:focus { border-color: var(--primary); }
+        .floating-input input.error-border { border-color: var(--danger) !important; }
+
         /* Buttons */
-        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px;}
+        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;}
         .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
         .btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none;}
         .btn-success { background: var(--success); }
         .btn-success:hover:not(:disabled) { background: #059669; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
 
-        /* Hidden File Input */
-        #fileInput { display: none; }
+        /* File Input Styling */
+        .file-upload-wrapper { border: 2px dashed var(--border); padding: 15px; border-radius: 8px; margin-bottom: 15px; background: #f8fafc; transition: 0.3s;}
+        .file-upload-wrapper:hover { border-color: var(--primary); background: #f1f5f9;}
+        .file-upload-wrapper input[type="file"] { width: 100%; font-size: 0.85rem; color: #64748b; cursor: pointer; }
 
         /* Toast */
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; transition: 0.4s; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
@@ -128,11 +147,30 @@
             <div class="action-card">
                 <div class="action-icon import-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
                 <div class="action-title">Restore Backup</div>
-                <div class="action-desc">Upload a previously exported TIB Vault `.json` file to merge it with your current account. Ensure you remember the Master PIN used during export.</div>
+                <div class="action-desc" style="color: #9a3412; font-weight: 500; background: #fff7ed; padding: 10px; border-radius: 6px; border: 1px solid #ffedd5;">
+                    To prevent data corruption, please provide the PIN used during export to decrypt the file, and your current PIN to re-secure it.
+                </div>
                 
-                <input type="file" id="fileInput" accept=".json" onchange="handleFileSelect(event)">
-                <button class="btn btn-success" id="importBtn" onclick="document.getElementById('fileInput').click()">
-                    <i class="fa-solid fa-upload" id="importIcon"></i> <span id="importText">Upload JSON File</span>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="fileInput" accept=".json">
+                </div>
+
+                <div class="input-group">
+                    <div class="floating-input">
+                        <input type="password" id="backupPin" placeholder=" ">
+                        <label><i class="fa-solid fa-file-shield"></i> PIN Used During Export</label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="floating-input">
+                        <input type="password" id="currentPin" placeholder=" ">
+                        <label><i class="fa-solid fa-key"></i> Current App Master PIN</label>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" id="importBtn" onclick="processImport()">
+                    <i class="fa-solid fa-upload" id="importIcon"></i> <span id="importText">Decrypt & Restore</span>
                 </button>
             </div>
 
@@ -230,51 +268,89 @@
             }
         }
 
-        // --- Import Logic ---
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        // --- ADVANCED IMPORT LOGIC (Decryption -> Re-encryption) ---
+        function processImport() {
+            const fileInput = document.getElementById('fileInput');
+            const backupPin = document.getElementById('backupPin').value;
+            const currentPin = document.getElementById('currentPin').value;
 
+            document.getElementById('backupPin').classList.remove('error-border');
+            document.getElementById('currentPin').classList.remove('error-border');
+
+            if (!fileInput.files.length) return showToast("Please select a JSON backup file.", "error");
+            if (!backupPin) { document.getElementById('backupPin').classList.add('error-border'); return showToast("Backup PIN is required.", "error"); }
+            if (!currentPin) { document.getElementById('currentPin').classList.add('error-border'); return showToast("Current PIN is required.", "error"); }
+
+            const file = fileInput.files[0];
             const reader = new FileReader();
+            
             reader.onload = async function(e) {
                 const btn = document.getElementById('importBtn'), icon = document.getElementById('importIcon'), txt = document.getElementById('importText');
-                btn.disabled = true; icon.className = "fa-solid fa-circle-notch fa-spin"; txt.innerText = "Restoring...";
+                btn.disabled = true; icon.className = "fa-solid fa-circle-notch fa-spin"; txt.innerText = "Restoring Data...";
 
                 try {
                     const parsedData = JSON.parse(e.target.result);
                     
-                    // Validate TIB Backup Format
                     if (parsedData.app !== "TIB_Vault" || !Array.isArray(parsedData.accounts)) {
                         throw new Error("Invalid backup file format.");
                     }
 
                     const accountsToImport = parsedData.accounts;
-                    if(accountsToImport.length === 0) {
-                        showToast("The backup file is empty.", "warning");
-                        return;
+                    if(accountsToImport.length === 0) return showToast("The backup file is empty.", "warning");
+
+                    let decryptedAccounts = [];
+                    let decryptionFailed = false;
+
+                    // STEP 1: Decrypt using Backup PIN
+                    for(let acc of accountsToImport) {
+                        try {
+                            const bytes = CryptoJS.AES.decrypt(acc.encrypted_secret, backupPin);
+                            const rawSecret = bytes.toString(CryptoJS.enc.Utf8);
+                            
+                            if(!rawSecret) { decryptionFailed = true; break; }
+                            
+                            decryptedAccounts.push({
+                                brand: acc.brand || 'Imported Service',
+                                username: acc.username || '',
+                                rawSecret: rawSecret
+                            });
+                        } catch (decryptError) {
+                            decryptionFailed = true; break;
+                        }
                     }
 
-                    // Prepare payload for Supabase
-                    const insertPayload = accountsToImport.map(acc => ({
-                        user_id: currentUser,
-                        brand: acc.brand || 'Imported Service',
-                        username: acc.username || '',
-                        encrypted_secret: acc.encrypted_secret
-                    }));
+                    if (decryptionFailed) {
+                        document.getElementById('backupPin').classList.add('error-border');
+                        throw new Error("Incorrect Backup PIN. Could not decrypt file.");
+                    }
 
-                    // Insert to DB
+                    // STEP 2: Re-encrypt using Current PIN and build DB payload
+                    const insertPayload = decryptedAccounts.map(acc => {
+                        const newEncrypted = CryptoJS.AES.encrypt(acc.rawSecret, currentPin).toString();
+                        return {
+                            user_id: currentUser,
+                            brand: acc.brand,
+                            username: acc.username,
+                            encrypted_secret: newEncrypted
+                        };
+                    });
+
+                    // STEP 3: Insert to Supabase DB
                     const { error } = await supabaseClient.from('user_2fa_secrets').insert(insertPayload);
-                    if (error) throw error;
+                    if (error) throw new Error("Failed to upload restored data to the cloud.");
 
-                    showToast(`${accountsToImport.length} accounts restored successfully!`, "success");
+                    showToast(`${insertPayload.length} accounts restored successfully!`, "success");
+                    
+                    // Clear inputs
+                    document.getElementById('fileInput').value = '';
+                    document.getElementById('backupPin').value = '';
+                    document.getElementById('currentPin').value = '';
                     
                 } catch (err) {
                     console.error(err);
-                    showToast("Error: Invalid or corrupted JSON file.", "error");
+                    showToast(err.message || "Error: Failed to process file.", "error");
                 } finally {
-                    // Reset file input
-                    document.getElementById('fileInput').value = '';
-                    btn.disabled = false; icon.className = "fa-solid fa-upload"; txt.innerText = "Upload JSON File";
+                    btn.disabled = false; icon.className = "fa-solid fa-upload"; txt.innerText = "Decrypt & Restore";
                 }
             };
             reader.readAsText(file);
@@ -291,14 +367,11 @@
             
             setTimeout(() => {
                 t.classList.remove('show');
-                setTimeout(() => t.style.background = '', 400); // Reset background after transition
+                setTimeout(() => t.style.background = '', 400); // Reset background
             }, 3000);
         }
 
-        async function logOut() { 
-            try { await supabaseClient.auth.signOut(); } catch(e){} 
-            window.location.replace("login.html"); 
-        }
+        async function logOut() { await supabaseClient.auth.signOut(); window.location.replace("login.html"); }
     </script>
 </body>
 </html>
