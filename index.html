@@ -12,7 +12,7 @@
     
     <style>
         /* --- GLOBAL STYLES --- */
-        :root { --bg-body: #f8fafc; --primary: #4f46e5; --primary-hover: #4338ca; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --bg-card: #ffffff; }
+        :root { --bg-body: #f8fafc; --primary: #4f46e5; --primary-hover: #4338ca; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --bg-card: #ffffff; }
         body { margin: 0; padding-top: 80px; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; user-select: none; }
         * { box-sizing: border-box; outline: none; }
 
@@ -38,16 +38,13 @@
         .container { width: 100%; max-width: 500px; padding: 20px; flex: 1; margin-bottom: 40px;}
         .card { background: white; padding: 35px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border: 1px solid var(--border); }
         h2 { color: var(--text-main); margin-top: 0; margin-bottom: 5px; }
-        p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
+        p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
 
-        /* --- PIN INPUT UI --- */
-        .pin-input-box {
-            width: 100%; padding: 15px; font-size: 2.5rem; text-align: center; letter-spacing: 15px;
-            border: 2px solid var(--border); border-radius: 12px; font-family: monospace;
-            color: var(--primary); font-weight: bold; background: #f8fafc; transition: 0.3s;
-        }
-        .pin-input-box:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(79, 70, 229, 0.2); }
-        .pin-input-box.error-border { border-color: var(--danger); color: var(--danger); }
+        /* --- LOADING SCREEN UI --- */
+        .loading-screen { text-align: center; padding: 60px 20px; }
+        .loading-spinner { font-size: 4.5rem; color: var(--primary); margin-bottom: 25px; }
+        .loading-title { font-size: 1.4rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; }
+        .loading-subtitle { font-size: 0.95rem; color: #64748b; }
 
         /* --- MODERN OUTLINE INPUTS --- */
         .input-group { position: relative; text-align: left; margin-bottom: 20px; width: 100%; }
@@ -64,19 +61,17 @@
         }
         .floating-input input:focus, .floating-input input:not(:placeholder-shown) { border-color: var(--primary); }
         .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
+        .floating-input input.error-border { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
+        .floating-input input.error-border ~ label { color: var(--danger) !important; }
+        .error-text { color: var(--danger); font-size: 0.8rem; font-weight: 600; margin-top: 6px; display: none; padding-left: 5px;}
 
         /* Buttons */
-        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 10px;}
+        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 10px;}
         .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
         .btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none;}
 
         /* --- SCREEN LOGIC --- */
-        #loadingScreen, #setupPinScreen, #unlockPinScreen, #appScreen { display: none; }
-        
-        /* Loading Spinner */
-        .loader-box { padding: 40px; text-align: center; color: var(--primary); }
-        .spinner { font-size: 3rem; margin-bottom: 15px; animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        #pinScreen, #appScreen { display: none; }
 
         /* --- 2FA APP SPECIFIC UI --- */
         .timer-box { background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
@@ -84,14 +79,20 @@
         .progress-bar.danger { background: var(--danger); }
         
         .acc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); transition: 0.2s;}
+        .acc-card:hover { border-color: var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.08);}
         .acc-info { display: flex; flex-direction: column; }
         .acc-brand { font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px;}
         .acc-user { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 5px;}
         
         .code-area { display: flex; align-items: center; gap: 15px; }
         .code-text { font-size: 2.2rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; font-family: monospace; user-select: text; cursor: pointer; transition: 0.2s;}
+        .code-text:hover { opacity: 0.8; }
         .btn-del { color: #cbd5e1; background: none; border: none; cursor: pointer; font-size: 1.2rem; transition: 0.2s; padding: 5px;}
         .btn-del:hover { color: var(--danger); transform: scale(1.1);}
+        
+        /* Sticky Reset Button */
+        .sticky-reset { position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; background: var(--bg-card); color: var(--danger); border: 2px solid #fee2e2; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; cursor: pointer; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s;}
+        .sticky-reset:hover { background: #fee2e2; transform: translateY(-5px) scale(1.05); }
 
         /* Toast Notification */
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
@@ -115,6 +116,7 @@
     <div class="mobile-menu" id="mobileMenu">
         <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Main Menu</div>
         <a href="index.html" class="active"><i class="fa-solid fa-shield-halved"></i> 2FA Vault</a>
+        <a href="password-generator.html"><i class="fa-solid fa-key"></i> Password Generator</a>
         
         <div style="padding: 20px 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Account</div>
         <a href="profile.html"><i class="fa-solid fa-circle-user"></i> Profile</a>
@@ -124,31 +126,23 @@
 
     <div class="container">
         
-        <div class="loader-box" id="loadingScreen">
-            <i class="fa-solid fa-circle-notch spinner"></i>
-            <h3>Connecting to Vault...</h3>
-            <p style="color: #64748b; font-size: 0.9rem;">Verifying security credentials</p>
+        <div class="loading-screen" id="loadingScreen">
+            <i class="fa-solid fa-circle-notch fa-spin loading-spinner"></i>
+            <div class="loading-title">Connecting to Vault...</div>
+            <div class="loading-subtitle">Verifying security credentials</div>
         </div>
 
-        <div class="card" id="setupPinScreen">
-            <i class="fa-solid fa-shield-cat" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 15px;"></i>
-            <h2>Create Vault PIN</h2>
-            <p class="subtitle">Set up a 4-digit PIN to encrypt your keys. Do not forget this PIN!</p>
-
-            <input type="password" id="newPinInput" class="pin-input-box" inputmode="numeric" maxlength="4" placeholder="••••">
-            
-            <button class="btn" id="setupBtn" onclick="setupNewPin()">
-                <i class="fa-solid fa-check-circle" id="setupIcon"></i> 
-                <span id="setupText">Set PIN & Continue</span>
-            </button>
-        </div>
-
-        <div class="card" id="unlockPinScreen">
-            <i class="fa-solid fa-lock" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 15px;"></i>
+        <div class="card" id="pinScreen">
+            <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 15px;"></i>
             <h2>Vault Locked</h2>
-            <p class="subtitle">Enter your 4-digit Master PIN to unlock your 2FA codes.</p>
+            <p class="subtitle">Enter your Master PIN to decrypt your 2FA keys.</p>
 
-            <input type="password" id="unlockPinInput" class="pin-input-box" inputmode="numeric" maxlength="4" placeholder="••••">
+            <div class="input-group">
+                <div class="floating-input">
+                    <input type="password" id="masterPinInput" placeholder=" ">
+                    <label><i class="fa-solid fa-key"></i> Master PIN</label>
+                </div>
+            </div>
 
             <button class="btn" id="unlockBtn" onclick="unlockVault()">
                 <i class="fa-solid fa-unlock-keyhole" id="unlockIcon"></i> 
@@ -184,6 +178,7 @@
                 <button class="btn" onclick="addSecret()">
                     <i class="fa-solid fa-floppy-disk"></i> Save Securely
                 </button>
+                <div style="font-size:0.8rem; margin-top:10px; color:var(--text-muted); text-align: center;" id="slotCounter">Slots available: 50/50</div>
             </div>
 
             <div class="timer-box">
@@ -198,14 +193,27 @@
         </div>
     </div>
 
+    <button class="sticky-reset" id="resetBtn" onclick="resetAll()" title="Delete All Data" style="display: none;">
+        <i class="fa-solid fa-trash-can"></i>
+    </button>
+
     <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText">Message</span></div>
 
     <script>
-        // --- Menu Logic ---
+        // --- Header Menu Logic ---
         const hamburgerBtn = document.getElementById("hamburgerBtn");
         const mobileMenu = document.getElementById("mobileMenu");
-        hamburgerBtn.addEventListener("click", () => { hamburgerBtn.classList.toggle("active"); mobileMenu.classList.toggle("active"); });
-        document.addEventListener('click', (event) => { if (!hamburgerBtn.contains(event.target) && !mobileMenu.contains(event.target) && mobileMenu.classList.contains('active')) { hamburgerBtn.classList.remove("active"); mobileMenu.classList.remove("active"); } });
+        
+        hamburgerBtn.addEventListener("click", () => {
+            hamburgerBtn.classList.toggle("active");
+            mobileMenu.classList.toggle("active");
+        });
+        document.addEventListener('click', (event) => {
+            if (!hamburgerBtn.contains(event.target) && !mobileMenu.contains(event.target) && mobileMenu.classList.contains('active')) {
+                hamburgerBtn.classList.remove("active");
+                mobileMenu.classList.remove("active");
+            }
+        });
 
         // --- Custom Toast System ---
         function showToast(msg, type = "success") {
@@ -224,126 +232,71 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let masterPin = null, accounts = [], currentUser = null, timerInterval;
-        let encryptedRowData = []; // To store DB data temporarily
 
-        // --- App Init & PIN Checker ---
+        // --- App Init & Auth Guard with Error Handling ---
         document.addEventListener('DOMContentLoaded', async () => {
-            showScreen('loadingScreen');
-            
-            const { data: sessionData } = await supabaseClient.auth.getSession();
-            if (!sessionData.session) {
-                window.location.href = "login.html"; // Kick if not logged in
-                return;
-            }
-            currentUser = sessionData.session.user.id;
+            try {
+                const { data, error } = await supabaseClient.auth.getSession();
+                
+                if (error) throw error;
 
-            // Fetch user's data
-            const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
-            
-            if(error) {
-                showToast("Connection failed. Try reloading.", "error");
-                return;
-            }
+                // Connection successful, hide loader
+                document.getElementById('loadingScreen').style.display = 'none';
 
-            // Check if PIN Setup marker exists
-            const pinMarker = data.find(row => row.brand === '__VAULT_PIN_CHECK__');
-            encryptedRowData = data; // Save for unlock step
-
-            if (pinMarker) {
-                // PIN already setup -> Show Unlock Screen
-                showScreen('unlockPinScreen');
-            } else {
-                // No PIN found -> Show Setup Screen
-                showScreen('setupPinScreen');
+                if (!data.session) {
+                    // Kick back to login if no session
+                    window.location.href = "login.html";
+                } else {
+                    currentUser = data.session.user.id;
+                    document.getElementById('pinScreen').style.display = 'block';
+                }
+            } catch (err) {
+                // If connection fails (e.g. CORS block due to wrong URL)
+                document.getElementById('loadingScreen').style.display = 'none';
+                showToast("Connection Error! Verify your Supabase Site URL.", "error");
+                console.error("Auth Error:", err);
+                // Fallback to login page after 2 seconds
+                setTimeout(() => { window.location.href = "login.html"; }, 2500);
             }
         });
 
-        function showScreen(screenId) {
-            ['loadingScreen', 'setupPinScreen', 'unlockPinScreen', 'appScreen'].forEach(id => document.getElementById(id).style.display = 'none');
-            document.getElementById(screenId).style.display = 'block';
-        }
-
-        // --- 1. SETUP NEW PIN ---
-        async function setupNewPin() {
-            const pinInput = document.getElementById('newPinInput');
-            const pin = pinInput.value;
+        // --- Core App Functions ---
+        async function unlockVault() {
+            const pinInput = document.getElementById('masterPinInput');
+            masterPin = pinInput.value;
+            if(!masterPin) return showToast("Master PIN is required!", "error");
             
-            if(!/^\d{4}$/.test(pin)) {
-                pinInput.classList.add('error-border');
-                return showToast("PIN must be exactly 4 digits!", "error");
-            }
-            pinInput.classList.remove('error-border');
-
-            const btn = document.getElementById('setupBtn');
-            btn.disabled = true; document.getElementById('setupText').innerText = "Saving...";
-
-            // Encrypt a check-word to verify later
-            const checkWordEncrypted = CryptoJS.AES.encrypt("VAULT_READY", pin).toString();
-
-            // Save marker to DB
-            const { error } = await supabaseClient.from('user_2fa_secrets')
-                .insert([{ user_id: currentUser, brand: '__VAULT_PIN_CHECK__', encrypted_secret: checkWordEncrypted }]);
-
-            if(error) {
-                btn.disabled = false; document.getElementById('setupText').innerText = "Set PIN & Continue";
-                return showToast("Failed to save PIN.", "error");
-            }
-
-            masterPin = pin;
-            showToast("PIN set successfully!");
-            showScreen('appScreen');
-            renderAccounts();
-        }
-
-        // --- 2. UNLOCK EXISTING PIN ---
-        function unlockVault() {
-            const pinInput = document.getElementById('unlockPinInput');
-            const pin = pinInput.value;
+            const btn = document.getElementById('unlockBtn'), btnIcon = document.getElementById('unlockIcon'), btnText = document.getElementById('unlockText');
+            btn.disabled = true; btnIcon.className = "fa-solid fa-circle-notch fa-spin"; btnText.innerText = "Decrypting...";
             
-            if(!/^\d{4}$/.test(pin)) {
-                pinInput.classList.add('error-border');
-                return showToast("Enter a 4-digit PIN", "error");
-            }
-            pinInput.classList.remove('error-border');
-
-            const btn = document.getElementById('unlockBtn');
-            btn.disabled = true; document.getElementById('unlockText').innerText = "Decrypting...";
-
-            // Find marker row
-            const pinMarker = encryptedRowData.find(row => row.brand === '__VAULT_PIN_CHECK__');
-            let isCorrect = false;
-
-            try {
-                const dec = CryptoJS.AES.decrypt(pinMarker.encrypted_secret, pin).toString(CryptoJS.enc.Utf8);
-                if (dec === "VAULT_READY") isCorrect = true;
-            } catch(e) {}
-
-            if(!isCorrect) {
-                btn.disabled = false; document.getElementById('unlockText').innerText = "Unlock Vault";
-                pinInput.classList.add('error-border');
-                pinInput.value = '';
-                return showToast("Incorrect PIN!", "error");
-            }
-
-            // PIN is correct, decrypt everything else
-            masterPin = pin;
-            accounts = [];
+            const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
             
-            encryptedRowData.forEach(row => {
-                if(row.brand !== '__VAULT_PIN_CHECK__') {
-                    try {
-                        const decSecret = CryptoJS.AES.decrypt(row.encrypted_secret, masterPin).toString(CryptoJS.enc.Utf8);
-                        accounts.push({ id: row.id, brand: row.brand, username: row.username, secret: decSecret });
-                    } catch(e) {} // Skip bad rows if any
-                }
+            btn.disabled = false; btnIcon.className = "fa-solid fa-unlock-keyhole"; btnText.innerText = "Unlock Vault";
+            
+            if(error) return showToast("Failed to connect to database.", "error");
+
+            accounts = []; let fail = false;
+            data.forEach(row => {
+                try {
+                    const dec = CryptoJS.AES.decrypt(row.encrypted_secret, masterPin).toString(CryptoJS.enc.Utf8);
+                    if(!dec) throw 'err';
+                    accounts.push({ id: row.id, brand: row.brand, username: row.username, secret: dec });
+                } catch(e) { fail = true; }
             });
 
-            showToast("Vault Unlocked!");
-            showScreen('appScreen');
-            renderAccounts();
+            if(fail && data.length > 0) { 
+                showToast("Incorrect Master PIN!", "error"); 
+                pinInput.classList.add('error-border');
+                masterPin = null; 
+            } else { 
+                showToast("Vault Unlocked!");
+                document.getElementById('pinScreen').style.display = 'none'; 
+                document.getElementById('appScreen').style.display = 'block';
+                document.getElementById('resetBtn').style.display = 'flex';
+                renderAccounts(); 
+            }
         }
 
-        // --- 3. ADD NEW SECRET ---
         async function addSecret() {
             if(accounts.length >= 50) return showToast("Maximum 50 slots allowed!", "error");
             
@@ -369,10 +322,10 @@
             } else { showToast("Failed to save data.", "error"); }
         }
 
-        // --- 4. RENDER & TIMER LOGIC ---
         function renderAccounts() {
             const container = document.getElementById('accountsContainer');
             container.innerHTML = '';
+            document.getElementById('slotCounter').innerText = `Slots available: ${50 - accounts.length}/50`;
             
             accounts.forEach((acc, i) => {
                 let userHtml = acc.username ? `<div class="acc-user"><i class="fa-regular fa-user"></i> ${acc.username}</div>` : '';
@@ -396,6 +349,7 @@
         function updateTimer() {
             let epoch = Math.floor(Date.now() / 1000);
             let rem = 30 - (epoch % 30);
+            
             document.getElementById('countdownText').innerText = rem + "s";
             let bar = document.getElementById('progressBar');
             bar.style.width = (rem/30*100) + "%";
@@ -411,17 +365,25 @@
             });
         }
 
-        // --- UTILS ---
         async function delAcc(id, index) {
-            if(!confirm("Delete this authenticator?")) return;
+            if(!confirm("Are you sure you want to delete this authenticator?")) return;
             const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('id', id);
             if(!error) { accounts.splice(index, 1); renderAccounts(); showToast("Deleted successfully!"); }
+            else { showToast("Failed to delete.", "error"); }
+        }
+
+        async function resetAll() {
+            if(accounts.length === 0) return showToast("Vault is already empty!", "error");
+            if(!confirm("WARNING: This will delete ALL your 2FA codes. This action cannot be undone. Are you sure?")) return;
+            
+            const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('user_id', currentUser);
+            if(!error) { accounts = []; renderAccounts(); showToast("All data cleared!"); }
         }
 
         function copyCode(id) {
             let txt = document.getElementById(id).innerText.replace(' ','');
             if(txt === "------") return;
-            navigator.clipboard.writeText(txt).then(() => showToast("Code Copied!"));
+            navigator.clipboard.writeText(txt).then(() => showToast("Code Copied to Clipboard!"));
         }
 
         async function logOut() {
