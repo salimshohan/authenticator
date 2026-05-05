@@ -60,7 +60,6 @@
         }
         .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
         .floating-input input:focus { border-color: var(--primary); }
-        
         .floating-input input.error-border { border-color: var(--danger) !important; }
         .floating-input input.error-border ~ label { color: var(--danger) !important; }
 
@@ -153,7 +152,7 @@
                 </div>
             </div>
             <button class="btn" id="unlockBtn" onclick="unlockVault()"><i class="fa-solid fa-unlock-keyhole" id="unlockIcon"></i> <span id="unlockText">Unlock Vault</span></button>
-            </div>
+        </div>
 
         <div id="appScreen" style="display:none;">
             <div class="card" id="addFormCard">
@@ -184,39 +183,55 @@
     <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText"></span></div>
 
     <script>
-        const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // --- 1. HARD FALLBACK TIMER (Fixes Infinite Loading) ---
+        // Jodi kono karone script crash kore, 3 second por auto login page e pathabe
+        const fallbackTimer = setTimeout(() => {
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen && loadingScreen.style.display !== 'none') {
+                window.location.href = "login.html";
+            }
+        }, 3000);
 
+        // --- Core Variables ---
+        let supabase;
         let masterPin = null, accounts = [], currentUser = null, timerInterval, isEditMode = false, editingId = null;
 
-        // --- BULLETPROOF INIT LOGIC ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Safety timeout in case network hangs
-            const fallbackTimeout = setTimeout(() => {
-                showToast("Connection timeout. Redirecting to login...", "error");
-                window.location.replace("login.html");
-            }, 8000);
-
+        async function initApp() {
             try {
+                // Initialize Supabase Inside Try Block for maximum safety
+                const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
+                const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c';
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
                 const { data, error } = await supabase.auth.getSession();
-                clearTimeout(fallbackTimeout); // Clear timeout if response received
                 
                 if (error) throw error;
                 
                 if (!data || !data.session) {
-                    window.location.replace("login.html");
+                    window.location.href = "login.html";
                     return;
                 }
+
+                // Session Success! Stop the fallback timer.
+                clearTimeout(fallbackTimer);
                 
                 currentUser = data.session.user.id;
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('pinScreen').style.display = 'block';
+
             } catch (err) {
-                console.error("Auth Init Error:", err);
-                window.location.replace("login.html");
+                console.error("Initialization Failed:", err);
+                window.location.href = "login.html";
             }
-        });
+        }
+
+        // Run Initialization on Load
+        initApp();
+
+        // --- Menu Logic ---
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const mobileMenu = document.getElementById("mobileMenu");
+        hamburgerBtn.addEventListener("click", () => { hamburgerBtn.classList.toggle("active"); mobileMenu.classList.toggle("active"); });
 
         async function unlockVault() {
             const pinInput = document.getElementById('masterPinInput');
@@ -420,12 +435,8 @@
 
         async function logOut() { 
             try { await supabase.auth.signOut(); } catch(e){} 
-            window.location.replace("login.html"); 
+            window.location.href = "login.html"; 
         }
-
-        const hamburgerBtn = document.getElementById("hamburgerBtn");
-        const mobileMenu = document.getElementById("mobileMenu");
-        hamburgerBtn.addEventListener("click", () => { hamburgerBtn.classList.toggle("active"); mobileMenu.classList.toggle("active"); });
     </script>
 </body>
 </html>
