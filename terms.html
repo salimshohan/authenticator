@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service | The Ironic Bro</title>
+    
+    <script>
+        window.onerror = function(msg, url, line) {
+            const ls = document.getElementById('loadingScreen');
+            if(ls) {
+                ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem; margin-bottom:10px;"></i><br>
+                    SYSTEM CRASHED!<br><br>
+                    Error: ${msg}<br>Line: ${line}<br><br>
+                    <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Go to Login Page</button>
+                </div>`;
+            }
+            return false;
+        };
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* --- GLOBAL STYLES --- */
+        :root { --bg-body: #f8fafc; --primary: #4f46e5; --primary-hover: #4338ca; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --bg-card: #ffffff; }
+        body { margin: 0; padding-top: 80px; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        * { box-sizing: border-box; outline: none; }
+
+        .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+
+        /* --- HEADER STYLES --- */
+        header { width: 100%; background: linear-gradient(90deg, #564ad3, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; color: white; text-transform: uppercase; text-decoration: none; }
+        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; }
+        .hamburger { cursor: pointer; width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; z-index: 2001; background: rgba(255, 255, 255, 0.15); border-radius: 8px; transition: 0.3s; }
+        .hamburger:hover { background: rgba(255, 255, 255, 0.25); }
+        .hamburger span { display: block; height: 3px; width: 24px; background: white; border-radius: 2px; transition: 0.3s; }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
+        
+        /* Mobile Menu */
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
+        .mobile-menu.active { right: 0; }
+        .mobile-menu a { color: #333; text-decoration: none; padding: 15px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; }
+        .mobile-menu a i { width: 25px; text-align: center; color: var(--primary); font-size: 18px; }
+        .mobile-menu a:hover, .mobile-menu a.active { background: #eff0f0; color: var(--primary); border-left: 4px solid var(--primary); }
+
+        /* --- LOADING SCREEN --- */
+        #loadingScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 100px; text-align: center;}
+        .spinner { border: 6px solid #e2e8f0; border-top: 6px solid var(--primary); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- CARDS & UI --- */
+        .container { width: 100%; max-width: 600px; padding: 20px; flex: 1; margin-bottom: 40px;}
+        .card { background: white; padding: 30px 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 25px;}
+        
+        .header-section { text-align: center; margin-bottom: 25px; border-bottom: 1px dashed var(--border); padding-bottom: 20px;}
+        .primary-text { color: var(--primary) !important; font-weight: 800; margin-top: 0; margin-bottom: 5px; font-size: 1.6rem; }
+        .subtitle { color: #64748b; font-size: 0.95rem; margin: 0; }
+        .last-updated { font-size: 0.8rem; color: #94a3b8; font-weight: 600; margin-top: 10px; display: inline-block; background: #f8fafc; padding: 5px 12px; border-radius: 50px; border: 1px solid #e2e8f0;}
+
+        /* Alert/Warning Box */
+        .warning-box { background: #fffbeb; color: #b45309; padding: 15px 20px; border-radius: 8px; border: 1px solid #fde68a; text-align: left; margin-bottom: 25px; font-size: 0.9rem; line-height: 1.6; }
+        .warning-box h3 { margin-top: 0; margin-bottom: 8px; font-size: 1rem; color: #b45309; display: flex; align-items: center; gap: 8px;}
+
+        /* Terms Sections */
+        .policy-section { margin-bottom: 25px; text-align: left;}
+        .policy-section h3 { font-size: 1.1rem; color: var(--text-main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .policy-section h3 i { color: var(--primary); font-size: 1.2rem;}
+        .policy-section p { font-size: 0.95rem; color: #475569; line-height: 1.6; margin-top: 0; margin-bottom: 12px;}
+        .policy-section ul { padding-left: 20px; margin-top: 0; margin-bottom: 15px;}
+        .policy-section li { font-size: 0.95rem; color: #475569; margin-bottom: 8px; line-height: 1.5;}
+        
+        .footer-text { text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 30px;}
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="brand-logo">
+            <img class="logo-icon" src="https://i.postimg.cc/44VPwf7L/tib-logo.jpg"> The Ironic Bro
+        </a>
+        <div class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; font-weight: bold;">VAULT MENU</div>
+        <a href="index.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="profile.html"><i class="fa-solid fa-circle-user"></i> My Profile</a>
+        <a href="activity-logs.html"><i class="fa-solid fa-shield-halved"></i> Activity Logs</a>
+        <a href="about.html"><i class="fa-solid fa-circle-info"></i> About App</a>
+        <a href="contact.html"><i class="fa-solid fa-envelope-open-text"></i> Contact Us</a>
+        <a href="settings.html"><i class="fa-solid fa-gear"></i> App Settings</a>
+        <a onclick="logOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+
+    <div class="container">
+        <div id="loadingScreen">
+            <div class="spinner"></div>
+            <div style="color:var(--primary); font-weight:bold; font-size:1.2rem;">Loading Terms...</div>
+        </div>
+
+        <div id="mainScreen" style="display:none;">
+            
+            <div class="card">
+                <div class="header-section">
+                    <i class="fa-solid fa-scale-balanced" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 15px;"></i>
+                    <h2 class="primary-text">Terms of Service</h2>
+                    <p class="subtitle">Please read these terms carefully before using the App.</p>
+                    <div class="last-updated">Effective Date: May 2026</div>
+                </div>
+
+                <div class="warning-box">
+                    <h3><i class="fa-solid fa-triangle-exclamation"></i> Important Disclaimer</h3>
+                    The Ironic Bro (TIB) 2FA Vault provides a tool for managing 2FA secrets. By using this service, you acknowledge that <strong>you are solely responsible for remembering your Master PIN.</strong> If you lose or forget it, your data cannot be recovered under any circumstances.
+                </div>
+
+                <div class="policy-section">
+                    <h3><i class="fa-solid fa-file-contract"></i> 1. Acceptance of Terms</h3>
+                    <p>By accessing or using the TIB 2FA Vault ("the App"), you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service.</p>
+                </div>
+
+                <div class="policy-section">
+                    <h3><i class="fa-solid fa-user-shield"></i> 2. User Responsibilities</h3>
+                    <ul>
+                        <li><strong>Account Security:</strong> You are responsible for safeguarding your login credentials and your Master PIN.</li>
+                        <li><strong>Data Loss:</strong> Because the App employs zero-knowledge encryption, the developers have no access to your Master PIN or unencrypted data. We are not liable for any data loss resulting from forgotten PINs.</li>
+                        <li><strong>Accurate Information:</strong> You agree to provide accurate information when creating your account.</li>
+                    </ul>
+                </div>
+
+                <div class="policy-section">
+                    <h3><i class="fa-solid fa-ban"></i> 3. Acceptable Use</h3>
+                    <p>You agree not to use the App to:</p>
+                    <ul>
+                        <li>Violate any local, state, or international law.</li>
+                        <li>Attempt to hack, reverse-engineer, or compromise the integrity of the platform.</li>
+                        <li>Interfere with or disrupt the service or servers connected to the service.</li>
+                    </ul>
+                </div>
+
+                <div class="policy-section">
+                    <h3><i class="fa-solid fa-server"></i> 4. Service Availability</h3>
+                    <p>While we strive for 99.9% uptime, we do not guarantee that the App will always be available or error-free. We reserve the right to modify, suspend, or discontinue the service at any time without prior notice.</p>
+                </div>
+
+                <div class="policy-section">
+                    <h3><i class="fa-solid fa-gavel"></i> 5. Limitation of Liability</h3>
+                    <p>In no event shall The Ironic Bro, nor its developers, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, or goodwill, resulting from your access to or use of or inability to access or use the App.</p>
+                </div>
+
+                <div class="policy-section">
+                    <h3><i class="fa-solid fa-pen-nib"></i> 6. Changes to Terms</h3>
+                    <p>We reserve the right to modify these terms at any time. By continuing to access or use our App after those revisions become effective, you agree to be bound by the revised terms.</p>
+                </div>
+
+            </div>
+
+            <div class="footer-text">
+                &copy; 2026 The Ironic Bro. All rights reserved.
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let supabaseClient;
+
+        // --- Core Init Logic ---
+        async function initApp() {
+            const fallbackTimeout = setTimeout(() => {
+                const ls = document.getElementById('loadingScreen');
+                if(ls && ls.style.display !== 'none') {
+                    ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
+                        Connection Timeout!<br><br><button onclick="window.location.href='login.html'" class="btn">Force Login</button>
+                    </div>`;
+                }
+            }, 5000);
+
+            try {
+                const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
+                const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c';
+                
+                if (typeof window.supabase === 'undefined') throw new Error("Supabase failed to load.");
+                
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const { data, error } = await supabaseClient.auth.getSession();
+                
+                clearTimeout(fallbackTimeout);
+
+                if (!data || !data.session) {
+                    window.location.replace("login.html");
+                    return;
+                }
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainScreen').style.display = 'block';
+
+            } catch (err) {
+                clearTimeout(fallbackTimeout);
+                window.location.replace("login.html");
+            }
+        }
+
+        initApp();
+
+        // --- Menu Logic ---
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const mobileMenu = document.getElementById("mobileMenu");
+        hamburgerBtn.addEventListener("click", () => { hamburgerBtn.classList.toggle("active"); mobileMenu.classList.toggle("active"); });
+
+        async function logOut() { 
+            try { await supabaseClient.auth.signOut(); } catch(e){} 
+            window.location.replace("login.html"); 
+        }
+    </script>
+</body>
+</html>
