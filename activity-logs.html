@@ -55,31 +55,37 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* --- CARDS & UI --- */
-        .container { width: 100%; max-width: 500px; padding: 20px; flex: 1; margin-bottom: 40px;}
+        .container { width: 100%; max-width: 550px; padding: 20px; flex: 1; margin-bottom: 40px;}
         .card { background: white; padding: 25px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 25px;}
         
         .header-section { text-align: center; margin-bottom: 25px; }
-        .primary-text { color: var(--primary) !important; font-weight: 800; margin-top: 0; margin-bottom: 5px; font-size: 1.5rem; }
-        .subtitle { color: #64748b; font-size: 0.9rem; margin: 0; }
+        .primary-text { color: var(--primary) !important; font-weight: 800; margin-top: 0; margin-bottom: 5px; font-size: 1.6rem; }
+        .subtitle { color: #64748b; font-size: 0.95rem; margin: 0; }
         
-        .info-box { background: #eff6ff; color: #3730a3; padding: 12px 15px; border-radius: 8px; border: 1px solid #c7d2fe; text-align: left; margin-bottom: 20px; font-size: 0.85rem; font-weight: 500; line-height: 1.5; }
+        .info-box { background: #eff6ff; color: #3730a3; padding: 12px 15px; border-radius: 8px; border: 1px solid #c7d2fe; text-align: left; margin-bottom: 20px; font-size: 0.85rem; font-weight: 600; line-height: 1.5; display: flex; gap: 10px; align-items: flex-start;}
 
-        /* --- LOG ITEMS --- */
-        .log-list { display: flex; flex-direction: column; }
-        .log-item { display: flex; align-items: flex-start; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
-        .log-item:last-child { border-bottom: none; padding-bottom: 0; }
+        /* --- LOG ITEMS TIMELINE STYLE --- */
+        .log-list { display: flex; flex-direction: column; gap: 15px;}
+        .log-item { display: flex; align-items: flex-start; gap: 15px; padding: 15px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; transition: 0.2s;}
+        .log-item:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1); }
         
-        .log-icon { width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; flex-shrink: 0; }
-        .log-icon.success { background: #ecfdf5; color: var(--success); }
-        .log-icon.warning { background: #fffbeb; color: var(--warning); }
-        .log-icon.info { background: #eff6ff; color: var(--primary); }
-        .log-icon.danger { background: #fef2f2; color: var(--danger); }
+        .log-icon { width: 45px; height: 45px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; flex-shrink: 0; }
+        
+        /* Event Colors */
+        .bg-success { background: #d1fae5; color: var(--success); }
+        .bg-danger { background: #fee2e2; color: var(--danger); }
+        .bg-warning { background: #fef3c7; color: #d97706; }
+        .bg-info { background: #e0e7ff; color: var(--primary); }
+        .bg-neutral { background: #f1f5f9; color: #64748b; }
 
         .log-details { flex: 1; display: flex; flex-direction: column; text-align: left;}
-        .log-title { font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px;}
-        .log-meta { font-size: 0.8rem; color: #64748b; display: flex; flex-direction: column; gap: 2px;}
-        .log-meta span { display: flex; align-items: center; gap: 5px;}
-        .log-time { font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-top: 5px;}
+        .log-title { font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;}
+        .log-desc { font-size: 0.85rem; color: #475569; margin-bottom: 8px; line-height: 1.4;}
+        
+        .log-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #94a3b8; font-weight: 600; border-top: 1px dashed #cbd5e1; padding-top: 8px;}
+        
+        .clear-btn { width: 100%; padding: 12px; background: white; color: var(--danger); border: 2px solid #fecaca; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 15px;}
+        .clear-btn:hover { background: #fee2e2; }
 
     </style>
 </head>
@@ -105,29 +111,43 @@
     <div class="container">
         <div id="loadingScreen">
             <div class="spinner"></div>
-            <div style="color:var(--primary); font-weight:bold; font-size:1.2rem;">Fetching Security Logs...</div>
+            <div style="color:var(--primary); font-weight:bold; font-size:1.2rem;">Fetching Security Audit...</div>
         </div>
 
         <div id="mainScreen" style="display:none;">
             <div class="header-section">
-                <i class="fa-solid fa-shield-cat" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
+                <i class="fa-solid fa-shield-cat" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 10px;"></i>
                 <h2 class="primary-text">Security Activity</h2>
-                <p class="subtitle">Review recent login attempts and security events.</p>
+                <p class="subtitle">Review recent events to ensure your vault is safe.</p>
             </div>
 
             <div class="info-box">
-                <i class="fa-solid fa-circle-info"></i> For privacy reasons, detailed IPs and locations are only tracked for the current active session.
+                <i class="fa-solid fa-circle-info" style="font-size: 1.2rem; margin-top: 2px;"></i> 
+                <div>For maximum privacy, local activity logs are stored securely on this device and are not uploaded to our cloud servers.</div>
             </div>
 
-            <div class="card">
+            <div class="card" style="background: transparent; border: none; padding: 0; box-shadow: none;">
                 <div class="log-list" id="logContainer">
                     </div>
+                
+                <button class="clear-btn" onclick="clearLocalLogs()">
+                    <i class="fa-solid fa-trash-can"></i> Clear Activity History
+                </button>
             </div>
         </div>
     </div>
 
     <script>
         let supabaseClient;
+        let currentUser = null;
+
+        // Detect Device Type Helper
+        function getDeviceType() {
+            const ua = navigator.userAgent;
+            if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return "Tablet Device";
+            if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) return "Mobile Device";
+            return "Desktop Browser";
+        }
 
         // --- Core Init Logic ---
         async function initApp() {
@@ -135,8 +155,7 @@
                 const ls = document.getElementById('loadingScreen');
                 if(ls && ls.style.display !== 'none') {
                     ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
-                        Connection Timeout!<br><br>
-                        <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Force Login</button>
+                        Connection Timeout!<br><br><button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Force Login</button>
                     </div>`;
                 }
             }, 5000);
@@ -155,10 +174,9 @@
 
                 if (!data || !data.session) return window.location.replace("login.html");
 
-                const user = data.session.user;
+                currentUser = data.session.user;
                 
-                // Render Logs
-                renderLogs(user);
+                renderLogs(currentUser);
 
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('mainScreen').style.display = 'block';
@@ -180,57 +198,76 @@
         function renderLogs(user) {
             const container = document.getElementById('logContainer');
             
-            // 1. Get exact last login time from Supabase
-            const lastSignIn = new Date(user.last_sign_in_at);
-            const formattedTime = lastSignIn.toLocaleString('en-US', { 
-                month: 'short', day: 'numeric', year: 'numeric', 
-                hour: 'numeric', minute: '2-digit', hour12: true 
+            // Format time helper
+            const formatTime = (isoString) => {
+                return new Date(isoString).toLocaleString('en-US', { 
+                    month: 'short', day: 'numeric', year: 'numeric', 
+                    hour: 'numeric', minute: '2-digit', hour12: true 
+                });
+            };
+
+            const deviceStr = getDeviceType();
+            
+            // 1. Fetch Supabase Verified Data
+            const accountCreatedDate = formatTime(user.created_at);
+            const lastSignInDate = formatTime(user.last_sign_in_at);
+
+            // 2. Fetch Local Custom Logs (from other pages)
+            // Expects array of objects: { type: 'login_fail', title: '...', desc: '...', time: '...', icon: 'fa-...', color: 'bg-...' }
+            let localLogs = JSON.parse(localStorage.getItem(`tib_logs_${user.id}`)) || [];
+
+            // Combine Core Logs and Local Logs
+            let combinedLogs = [
+                {
+                    type: 'login_success',
+                    title: 'Successful Login',
+                    desc: `Authenticated via Supabase Auth.<br><strong>Device:</strong> ${deviceStr}`,
+                    time: lastSignInDate,
+                    icon: 'fa-right-to-bracket',
+                    color: 'bg-success',
+                    timestamp: new Date(user.last_sign_in_at).getTime()
+                },
+                ...localLogs, // Custom events added from other pages
+                {
+                    type: 'account_created',
+                    title: 'Account Created',
+                    desc: `Welcome to the Vault! Zero-knowledge encryption activated.`,
+                    time: accountCreatedDate,
+                    icon: 'fa-user-shield',
+                    color: 'bg-info',
+                    timestamp: new Date(user.created_at).getTime()
+                }
+            ];
+
+            // Sort logs by newest first
+            combinedLogs.sort((a, b) => b.timestamp - a.timestamp);
+
+            // Generate HTML
+            let html = '';
+            combinedLogs.forEach(log => {
+                html += `
+                <div class="log-item">
+                    <div class="log-icon ${log.color}"><i class="fa-solid ${log.icon}"></i></div>
+                    <div class="log-details">
+                        <div class="log-title">${log.title}</div>
+                        <div class="log-desc">${log.desc}</div>
+                        <div class="log-footer">
+                            <span><i class="fa-solid fa-server"></i> System Event</span>
+                            <span>${log.time}</span>
+                        </div>
+                    </div>
+                </div>`;
             });
 
-            // Detect basic device type (Mobile or Desktop)
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const deviceIcon = isMobile ? '<i class="fa-solid fa-mobile-screen-button"></i>' : '<i class="fa-solid fa-laptop"></i>';
-            const deviceText = isMobile ? 'Mobile Device' : 'Desktop Browser';
-
-            // Generate UI
-            let html = `
-                <div class="log-item">
-                    <div class="log-icon success"><i class="fa-solid fa-right-to-bracket"></i></div>
-                    <div class="log-details">
-                        <div class="log-title">Successful Login</div>
-                        <div class="log-meta">
-                            <span>${deviceIcon} Current Device (${deviceText})</span>
-                            <span><i class="fa-solid fa-globe"></i> Active Session</span>
-                        </div>
-                        <div class="log-time"><i class="fa-regular fa-clock"></i> ${formattedTime}</div>
-                    </div>
-                </div>
-
-                <div class="log-item">
-                    <div class="log-icon info"><i class="fa-solid fa-user-shield"></i></div>
-                    <div class="log-details">
-                        <div class="log-title">Security Scan Completed</div>
-                        <div class="log-meta">
-                            <span><i class="fa-solid fa-shield-halved"></i> 2FA Vault Integrity Verified</span>
-                            <span><i class="fa-solid fa-lock"></i> Zero-Knowledge Encryption Active</span>
-                        </div>
-                        <div class="log-time"><i class="fa-regular fa-clock"></i> System Check</div>
-                    </div>
-                </div>
-
-                <div class="log-item">
-                    <div class="log-icon warning"><i class="fa-solid fa-user-plus"></i></div>
-                    <div class="log-details">
-                        <div class="log-title">Account Created</div>
-                        <div class="log-meta">
-                            <span><i class="fa-solid fa-envelope-circle-check"></i> Email Verified</span>
-                        </div>
-                        <div class="log-time"><i class="fa-regular fa-clock"></i> ${new Date(user.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                    </div>
-                </div>
-            `;
-
             container.innerHTML = html;
+        }
+
+        // --- Clear Local Logs ---
+        function clearLocalLogs() {
+            if(confirm("Are you sure you want to clear your local activity history? (Account creation and last login times cannot be deleted).")) {
+                localStorage.removeItem(`tib_logs_${currentUser.id}`);
+                renderLogs(currentUser); // Re-render to show only core logs
+            }
         }
 
         async function logOut() { 
