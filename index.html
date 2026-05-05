@@ -13,7 +13,7 @@
                     <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem; margin-bottom:10px;"></i><br>
                     SYSTEM CRASHED!<br><br>
                     Error: ${msg}<br>Line: ${line}<br><br>
-                    <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold;">Go to Login Page</button>
+                    <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Go to Login Page</button>
                 </div>`;
             }
             return false;
@@ -198,7 +198,8 @@
     <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText"></span></div>
 
     <script>
-        let supabase;
+        // VARIABLE NAME CHANGED TO AVOID CLASH
+        let supabaseClient;
         let masterPin = null, accounts = [], currentUser = null, timerInterval, isEditMode = false, editingId = null;
 
         // --- Core Init Logic ---
@@ -219,8 +220,9 @@
                 
                 if (typeof window.supabase === 'undefined') throw new Error("Supabase Library failed to load.");
                 
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                const { data, error } = await supabase.auth.getSession();
+                // INSTANTIATE WITH NEW VARIABLE NAME
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const { data, error } = await supabaseClient.auth.getSession();
                 
                 if (error) throw error;
                 
@@ -241,7 +243,7 @@
                 const ls = document.getElementById('loadingScreen');
                 if(ls) {
                     ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
-                        Network/CORS Error!<br><span style="font-size:0.8rem; color:#64748b;">Check if your GitHub URL is allowed in Supabase.</span><br><br>
+                        Network/Init Error!<br><span style="font-size:0.8rem; color:#64748b;">${err.message}</span><br><br>
                         <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Go to Login</button>
                     </div>`;
                 }
@@ -264,7 +266,7 @@
             btn.disabled = true; btnIcon.className = "fa-solid fa-circle-notch fa-spin"; btnText.innerText = "Decrypting...";
 
             try {
-                const { data, error } = await supabase.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
+                const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
                 if(error) throw error;
 
                 accounts = []; let fail = false;
@@ -320,11 +322,11 @@
             
             try {
                 if(editingId) {
-                    const { error } = await supabase.from('user_2fa_secrets').update({ brand, username: user, encrypted_secret: enc }).eq('id', editingId);
+                    const { error } = await supabaseClient.from('user_2fa_secrets').update({ brand, username: user, encrypted_secret: enc }).eq('id', editingId);
                     if(error) throw error;
                     showToast("Updated!"); resetForm();
                 } else {
-                    const { data, error } = await supabase.from('user_2fa_secrets').insert([{ user_id: currentUser, brand, username: user, encrypted_secret: enc }]).select();
+                    const { data, error } = await supabaseClient.from('user_2fa_secrets').insert([{ user_id: currentUser, brand, username: user, encrypted_secret: enc }]).select();
                     if(error) throw error;
                     showToast("Saved!"); resetForm();
                 }
@@ -337,7 +339,7 @@
         }
 
         async function fetchAndSync() {
-            const { data } = await supabase.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
+            const { data } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
             accounts = data.map(row => ({
                 id: row.id, brand: row.brand, username: row.username,
                 secret: CryptoJS.AES.decrypt(row.encrypted_secret, masterPin).toString(CryptoJS.enc.Utf8)
@@ -433,7 +435,7 @@
 
         async function deleteAcc(id) {
             if(confirm("Delete this code permanently?")) {
-                await supabase.from('user_2fa_secrets').delete().eq('id', id);
+                await supabaseClient.from('user_2fa_secrets').delete().eq('id', id);
                 fetchAndSync();
                 showToast("Deleted!", "success");
             }
@@ -456,8 +458,8 @@
         }
 
         async function logOut() { 
-            try { await supabase.auth.signOut(); } catch(e){} 
-            window.location.href = "login.html"; 
+            try { await supabaseClient.auth.signOut(); } catch(e){} 
+            window.location.replace("login.html"); 
         }
     </script>
 </body>
