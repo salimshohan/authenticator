@@ -546,20 +546,23 @@
         }
 
         async function moveToBin(id) {
-            try {
-                const { error } = await supabaseClient.from('user_2fa_secrets').update({ is_deleted: true }).eq('id', id);
-                if (error) throw error;
-                
-                // Reset form if they send the currently editing item to bin
-                if(editingId === id) resetForm();
-                
-                fetchAndSync(); 
-                showToast("Moved to Bin!");
-            } catch(e) {
-                console.error(e);
-                alert("Database Error: Make sure RLS is configured correctly.");
-            }
-        }
+    try {
+        // is_deleted true korar sathe sathe current time tao save kore dicchi
+        const { error } = await supabaseClient
+            .from('user_2fa_secrets')
+            .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        if(editingId === id) resetForm();
+        fetchAndSync(); 
+        showToast("Moved to Bin!");
+    } catch(e) {
+        console.error(e);
+        alert("Database Error: Make sure you added 'deleted_at' column.");
+    }
+}
 
         // Updated Copy Code to handle Main vs Next code
         function copyCode(id, isNext) {
