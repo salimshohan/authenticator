@@ -60,9 +60,13 @@
         }
         .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
         .floating-input input:focus { border-color: var(--primary); }
+        
+        .floating-input input.error-border { border-color: var(--danger) !important; }
+        .floating-input input.error-border ~ label { color: var(--danger) !important; }
 
         .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px;}
         .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none;}
 
         /* --- FLOATING CIRCLE TIMER --- */
         .timer-container {
@@ -73,7 +77,7 @@
         .timer-bg { fill: white; stroke: #e2e8f0; stroke-width: 5; }
         .timer-progress {
             fill: none; stroke: var(--success); stroke-width: 5;
-            stroke-dasharray: 172.7; /* 2 * PI * R (27.5) */
+            stroke-dasharray: 172.7; 
             stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s;
             stroke-linecap: round;
         }
@@ -90,19 +94,16 @@
         .acc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
         .acc-card:hover { border-color: var(--primary); }
         
-        /* Brand & Username Block Line */
         .acc-top-block { background: #fcfdfe; padding: 12px 20px; border-bottom: 1px dashed var(--border); text-align: left; }
         .acc-brand { font-size: 1rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
         .acc-user { font-size: 0.75rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; margin-top: 2px; }
 
-        /* Code Area Block */
         .acc-bottom-block { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .code-main-text { font-size: 2.1rem; font-weight: 800; color: var(--primary); letter-spacing: 2px; font-family: monospace; cursor: pointer; transition: 0.2s; line-height: 1; }
         .next-code-box { display: flex; flex-direction: column; align-items: flex-end; cursor: pointer; }
         .next-label { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
         .next-text { font-size: 1rem; font-weight: 700; color: #cbd5e1; font-family: monospace; letter-spacing: 1px; }
 
-        /* Edit Controls */
         .acc-edit-bar { background: #f8fafc; padding: 8px 20px; display: none; justify-content: flex-end; gap: 15px; border-top: 1px solid #f1f5f9; }
         .acc-edit-bar.active { display: flex; }
         .btn-icon { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 1rem; transition: 0.2s; }
@@ -135,7 +136,11 @@
     </div>
 
     <div class="container">
-        <div id="loadingScreen"><div class="spinner"></div><div style="color:var(--primary); font-weight:bold;">Initializing Vault...</div></div>
+        <div id="loadingScreen">
+            <div class="spinner"></div>
+            <div style="color:var(--primary); font-weight:bold; font-size:1.2rem;">Initializing Vault...</div>
+            <div style="color:#64748b; font-size:0.9rem; margin-top:5px;">Verifying your secure session</div>
+        </div>
 
         <div class="card" id="pinScreen" style="display:none;">
             <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
@@ -147,9 +152,8 @@
                     <label><i class="fa-solid fa-key"></i> Master PIN</label>
                 </div>
             </div>
-            <button class="btn" onclick="unlockVault()"><i class="fa-solid fa-unlock-keyhole"></i> Unlock Vault</button>
-            <a onclick="resetAllWarning()" style="color:var(--danger); font-size:0.8rem; display:block; margin-top:15px; cursor:pointer;">Forgotten PIN? Reset Vault</a>
-        </div>
+            <button class="btn" id="unlockBtn" onclick="unlockVault()"><i class="fa-solid fa-unlock-keyhole" id="unlockIcon"></i> <span id="unlockText">Unlock Vault</span></button>
+            </div>
 
         <div id="appScreen" style="display:none;">
             <div class="card" id="addFormCard">
@@ -186,59 +190,113 @@
 
         let masterPin = null, accounts = [], currentUser = null, timerInterval, isEditMode = false, editingId = null;
 
-        window.onload = async () => {
-            const { data } = await supabase.auth.getSession();
-            if (!data.session) return window.location.replace("login.html");
-            currentUser = data.session.user.id;
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('pinScreen').style.display = 'block';
-        };
+        // --- BULLETPROOF INIT LOGIC ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Safety timeout in case network hangs
+            const fallbackTimeout = setTimeout(() => {
+                showToast("Connection timeout. Redirecting to login...", "error");
+                window.location.replace("login.html");
+            }, 8000);
+
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                clearTimeout(fallbackTimeout); // Clear timeout if response received
+                
+                if (error) throw error;
+                
+                if (!data || !data.session) {
+                    window.location.replace("login.html");
+                    return;
+                }
+                
+                currentUser = data.session.user.id;
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('pinScreen').style.display = 'block';
+            } catch (err) {
+                console.error("Auth Init Error:", err);
+                window.location.replace("login.html");
+            }
+        });
 
         async function unlockVault() {
-            const pin = document.getElementById('masterPinInput').value;
+            const pinInput = document.getElementById('masterPinInput');
+            const pin = pinInput.value;
             if(!pin) return showToast("PIN required!", "error");
             
-            const { data, error } = await supabase.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
-            if(error) return showToast("DB Connection Error", "error");
+            const btn = document.getElementById('unlockBtn'), btnIcon = document.getElementById('unlockIcon'), btnText = document.getElementById('unlockText');
+            btn.disabled = true; btnIcon.className = "fa-solid fa-circle-notch fa-spin"; btnText.innerText = "Decrypting...";
 
-            accounts = []; let fail = false;
-            data.forEach(row => {
-                try {
-                    const dec = CryptoJS.AES.decrypt(row.encrypted_secret, pin).toString(CryptoJS.enc.Utf8);
-                    if(!dec) throw 'err';
-                    accounts.push({ id: row.id, brand: row.brand, username: row.username, secret: dec });
-                } catch(e) { fail = true; }
-            });
+            try {
+                const { data, error } = await supabase.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
+                if(error) throw error;
 
-            if(fail && data.length > 0) {
-                showToast("Incorrect PIN!", "error");
-            } else {
-                masterPin = pin;
-                document.getElementById('pinScreen').style.display = 'none';
-                document.getElementById('appScreen').style.display = 'block';
-                renderAccounts();
+                accounts = []; let fail = false;
+                data.forEach(row => {
+                    try {
+                        const dec = CryptoJS.AES.decrypt(row.encrypted_secret, pin).toString(CryptoJS.enc.Utf8);
+                        if(!dec) throw 'err';
+                        accounts.push({ id: row.id, brand: row.brand, username: row.username, secret: dec });
+                    } catch(e) { fail = true; }
+                });
+
+                if(fail && data.length > 0) {
+                    showToast("Incorrect PIN!", "error");
+                    pinInput.classList.add('error-border');
+                } else {
+                    masterPin = pin;
+                    document.getElementById('pinScreen').style.display = 'none';
+                    document.getElementById('appScreen').style.display = 'block';
+                    renderAccounts();
+                }
+            } catch(err) {
+                showToast("Connection Error!", "error");
+            } finally {
+                btn.disabled = false; btnIcon.className = "fa-solid fa-unlock-keyhole"; btnText.innerText = "Unlock Vault";
             }
         }
 
         async function saveSecret() {
             if(accounts.length >= 200 && !editingId) return showToast("Limit reached (200)!", "error");
-            const brand = document.getElementById('brandInput').value.trim() || 'Service';
+            
+            const brandInput = document.getElementById('brandInput');
+            const secretInput = document.getElementById('secretKeyInput');
+            const brand = brandInput.value.trim() || 'Service';
             const user = document.getElementById('userInput').value.trim();
-            const secret = document.getElementById('secretKeyInput').value.replace(/\s+/g, '').toUpperCase();
+            const secret = secretInput.value.replace(/\s+/g, '').toUpperCase();
 
-            if(!secret) return showToast("Secret key required!", "error");
-            try { new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(secret) }); } catch(e) { return showToast("Invalid Secret Key!", "error"); }
+            brandInput.classList.remove('error-border');
+            secretInput.classList.remove('error-border');
+
+            if(!secret) {
+                secretInput.classList.add('error-border');
+                return showToast("Secret key required!", "error");
+            }
+            try { new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(secret) }); } catch(e) { 
+                secretInput.classList.add('error-border');
+                return showToast("Invalid Secret Key format!", "error"); 
+            }
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
 
             const enc = CryptoJS.AES.encrypt(secret, masterPin).toString();
             
-            if(editingId) {
-                const { error } = await supabase.from('user_2fa_secrets').update({ brand, username: user, encrypted_secret: enc }).eq('id', editingId);
-                if(!error) { showToast("Updated!"); resetForm(); }
-            } else {
-                const { data, error } = await supabase.from('user_2fa_secrets').insert([{ user_id: currentUser, brand, username: user, encrypted_secret: enc }]).select();
-                if(!error) { accounts.push({ id: data[0].id, brand, username: user, secret }); showToast("Saved!"); resetForm(); }
+            try {
+                if(editingId) {
+                    const { error } = await supabase.from('user_2fa_secrets').update({ brand, username: user, encrypted_secret: enc }).eq('id', editingId);
+                    if(error) throw error;
+                    showToast("Updated!"); resetForm();
+                } else {
+                    const { data, error } = await supabase.from('user_2fa_secrets').insert([{ user_id: currentUser, brand, username: user, encrypted_secret: enc }]).select();
+                    if(error) throw error;
+                    showToast("Saved!"); resetForm();
+                }
+                fetchAndSync();
+            } catch(err) {
+                showToast("Error saving data", "error");
+            } finally {
+                btn.disabled = false;
             }
-            fetchAndSync();
         }
 
         async function fetchAndSync() {
@@ -254,7 +312,7 @@
             const container = document.getElementById('accountsContainer');
             container.innerHTML = '';
             document.getElementById('slotCounter').innerText = `Slots used: ${accounts.length}/200`;
-            document.getElementById('floatingTimer').style.display = accounts.length > 0 ? 'block' : 'none';
+            document.getElementById('floatingTimer').style.display = accounts.length > 0 ? 'flex' : 'none';
 
             accounts.forEach((acc, i) => {
                 container.insertAdjacentHTML('beforeend', `
@@ -266,13 +324,13 @@
                         <div class="acc-bottom-block no-select">
                             <div class="code-main-text" id="code-${i}" onclick="copyCode('code-${i}', false)">--- ---</div>
                             <div class="next-code-box" onclick="copyCode('next-code-${i}', true)">
-                                <span class="next-label">Next</span>
+                                <span class="next-label">Next Code</span>
                                 <span class="next-text" id="next-code-${i}">--- ---</span>
                             </div>
                         </div>
                         <div class="acc-edit-bar ${isEditMode ? 'active' : ''}">
-                            <button class="btn-icon" onclick="triggerEdit(${i})"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button class="btn-icon del" onclick="deleteAcc('${acc.id}')"><i class="fa-solid fa-trash-can"></i></button>
+                            <button class="btn-icon" onclick="triggerEdit(${i})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn-icon del" onclick="deleteAcc('${acc.id}')" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>`);
             });
@@ -298,9 +356,16 @@
                 accounts.forEach((acc, i) => {
                     try {
                         let totp = new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(acc.secret) });
-                        document.getElementById(`code-${i}`).innerText = totp.generate().replace(/(...)(...)/, '$1 $2');
-                        document.getElementById(`next-code-${i}`).innerText = totp.generate({ timestamp: (epoch + 30) }).replace(/(...)(...)/, '$1 $2');
-                        document.getElementById(`code-${i}`).style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)';
+                        let el = document.getElementById(`code-${i}`);
+                        let nEl = document.getElementById(`next-code-${i}`);
+                        
+                        if(el) {
+                            el.innerText = totp.generate().replace(/(...)(...)/, '$1 $2');
+                            el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)';
+                        }
+                        if(nEl) {
+                            nEl.innerText = totp.generate({ timestamp: (epoch + 30) }).replace(/(...)(...)/, '$1 $2');
+                        }
                     } catch(e){}
                 });
             }, 1000);
@@ -333,12 +398,15 @@
             if(confirm("Delete this code permanently?")) {
                 await supabase.from('user_2fa_secrets').delete().eq('id', id);
                 fetchAndSync();
+                showToast("Deleted!", "success");
             }
         }
 
         function copyCode(id, isNext) {
             if(isEditMode) return;
-            const txt = document.getElementById(id).innerText.replace(/\s/g, '');
+            let el = document.getElementById(id);
+            if(!el) return;
+            const txt = el.innerText.replace(/\s/g, '');
             if(txt.includes('-')) return;
             navigator.clipboard.writeText(txt).then(() => showToast(isNext ? "Next code copied!" : "Current code copied!"));
         }
@@ -350,14 +418,10 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        async function resetAllWarning() {
-            if(confirm("⚠️ PERMANENT DELETE: All codes will be lost! Are you sure?")) {
-                await supabase.from('user_2fa_secrets').delete().eq('user_id', currentUser);
-                window.location.replace("signup.html");
-            }
+        async function logOut() { 
+            try { await supabase.auth.signOut(); } catch(e){} 
+            window.location.replace("login.html"); 
         }
-
-        async function logOut() { await supabase.auth.signOut(); window.location.replace("login.html"); }
 
         const hamburgerBtn = document.getElementById("hamburgerBtn");
         const mobileMenu = document.getElementById("mobileMenu");
