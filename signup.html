@@ -14,7 +14,7 @@
         body { margin: 0; padding-top: 80px; font-family: sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         * { box-sizing: border-box; outline: none; }
 
-        /* --- TIB HEADER STYLES --- */
+        /* --- HEADER STYLES --- */
         header { width: 100%; background: linear-gradient(90deg, #564ad3, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; color: white; text-transform: uppercase; text-decoration: none; }
         .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; }
@@ -38,16 +38,21 @@
         h2 { color: var(--text-main); margin-top: 0; margin-bottom: 5px; }
         p.subtitle { color: #666; font-size: 0.9rem; margin-bottom: 25px; }
 
-        /* Grid for Inputs */
+        /* Grid & Inputs */
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .input-group { position: relative; margin-bottom: 15px; text-align: left; }
+        .input-group { position: relative; margin-bottom: 5px; text-align: left; }
         .input-group.full { grid-column: span 2; }
         .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #555; margin-bottom: 5px; }
         
-        input, select { width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; transition: 0.3s; background: white; font-family: sans-serif;}
-        input:focus, select:focus { border-color: var(--primary); }
+        .input-wrapper { position: relative; }
+        input { width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; transition: 0.3s; background: white; font-family: sans-serif;}
+        input:focus { border-color: var(--primary); }
         
-        .eye-icon { position: absolute; right: 15px; top: 38px; color: #888; cursor: pointer; font-size: 1.1rem; }
+        /* Inline Error Styles */
+        input.error-border { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1); }
+        .error-text { color: var(--danger); font-size: 0.8rem; font-weight: 600; margin-top: 5px; display: none; }
+        
+        .eye-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #888; cursor: pointer; font-size: 1.1rem; }
         .eye-icon:hover { color: var(--primary); }
 
         /* Password Strength */
@@ -55,17 +60,14 @@
         .strength-fill { height: 100%; width: 0%; transition: 0.3s; }
         .strength-text { font-size: 0.8rem; margin-top: 5px; text-align: right; display: none;}
 
-        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px;}
+        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 20px;}
         .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
         .btn:disabled { background: #999; cursor: not-allowed; transform: none; }
         
         .link { display: block; margin-top: 20px; color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;}
-
-        /* --- TOAST NOTIFICATION --- */
-        .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .toast.show { bottom: 30px; }
-        .toast.error { background: var(--danger); }
-        .toast.success { background: var(--success); }
+        
+        /* Success Message */
+        .success-box { display: none; background: #e8f8f5; color: var(--success); padding: 15px; border-radius: 8px; border: 1px solid #a3e4d7; font-weight: bold; margin-bottom: 20px; }
 
         @media (max-width: 480px) { .input-grid { grid-template-columns: 1fr; gap: 0; } .input-group.full { grid-column: span 1; } }
     </style>
@@ -82,16 +84,10 @@
     </header>
 
     <div class="mobile-menu" id="mobileMenu">
-        <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Main Menu</div>
         <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
-        <a href="vault.html"><i class="fa-solid fa-shield-halved"></i> 2FA Vault</a>
         <a href="password-generator.html"><i class="fa-solid fa-key"></i> Password Generator</a>
-        
-        <div style="padding: 20px 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Account</div>
         <a href="login.html"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
         <a href="signup.html" class="active"><i class="fa-solid fa-user-plus"></i> Sign Up</a>
-        <a href="profile.html"><i class="fa-solid fa-circle-user"></i> Profile</a>
-        <a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a>
     </div>
 
     <div class="container">
@@ -99,40 +95,40 @@
             <h2>Create Account</h2>
             <p class="subtitle">Secure your digital life with zero-knowledge encryption.</p>
             
+            <div class="success-box" id="successBox"></div>
+
             <div class="input-grid">
                 <div class="input-group">
                     <label>Full Name</label>
-                    <input type="text" id="name" placeholder="John Doe">
-                </div>
-                <div class="input-group">
-                    <label>Username</label>
-                    <input type="text" id="username" placeholder="johndoe99">
+                    <div class="input-wrapper"><input type="text" id="name" placeholder="John Doe"></div>
+                    <div class="error-text" id="nameError"></div>
                 </div>
                 
                 <div class="input-group">
-                    <label>Country</label>
-                    <select id="country">
-                        <option value="Bangladesh">Bangladesh</option>
-                        <option value="India">India</option>
-                        <option value="United States">United States</option>
-                        <option value="United Kingdom">United Kingdom</option>
-                        <option value="Other">Other</option>
-                    </select>
+                    <label>Username</label>
+                    <div class="input-wrapper"><input type="text" id="username" placeholder="johndoe99"></div>
+                    <div class="error-text" id="usernameError"></div>
                 </div>
-                <div class="input-group">
+                
+                <div class="input-group full">
                     <label>Date of Birth</label>
-                    <input type="date" id="dob">
+                    <div class="input-wrapper"><input type="date" id="dob"></div>
+                    <div class="error-text" id="dobError"></div>
                 </div>
 
                 <div class="input-group full">
                     <label>Email Address</label>
-                    <input type="email" id="email" placeholder="example@email.com">
+                    <div class="input-wrapper"><input type="email" id="email" placeholder="example@email.com"></div>
+                    <div class="error-text" id="emailError"></div>
                 </div>
 
                 <div class="input-group full">
                     <label>Create Password</label>
-                    <input type="password" id="password" placeholder="At least 6 characters" oninput="checkStrength()">
-                    <i class="fa-solid fa-eye-slash eye-icon" id="togglePassword" onclick="togglePass()"></i>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" placeholder="At least 6 characters" oninput="checkStrength()">
+                        <i class="fa-solid fa-eye-slash eye-icon" id="togglePassword" onclick="togglePass()"></i>
+                    </div>
+                    <div class="error-text" id="passwordError"></div>
                     
                     <div class="strength-bar" id="sBarBox"><div class="strength-fill" id="sFill"></div></div>
                     <div class="strength-text" id="sText">Weak</div>
@@ -143,8 +139,6 @@
             <a href="login.html" class="link">Already have an account? Login here.</a>
         </div>
     </div>
-
-    <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText">Message</span></div>
 
     <script>
         // --- Header Logic ---
@@ -194,17 +188,18 @@
             else { fill.style.width = "100%"; fill.style.background = "var(--success)"; text.innerText = "Strong Password"; text.style.color = "var(--success)"; }
         }
 
-        // --- Custom Toast System (English) ---
-        function showToast(msg, type = "error") {
-            const toast = document.getElementById("toastMsg"), icon = document.getElementById("toastIcon");
-            document.getElementById("toastText").innerText = msg;
-            
-            toast.className = "toast"; 
-            if(type === "error") { toast.classList.add("error"); icon.className = "fa-solid fa-circle-exclamation"; }
-            else { toast.classList.add("success"); icon.className = "fa-solid fa-circle-check"; }
-            
-            toast.classList.add("show");
-            setTimeout(() => toast.classList.remove("show"), 4000);
+        // --- INLINE VALIDATION SYSTEM ---
+        function clearErrors() {
+            document.querySelectorAll('input').forEach(input => input.classList.remove('error-border'));
+            document.querySelectorAll('.error-text').forEach(msg => { msg.style.display = 'none'; msg.innerText = ''; });
+        }
+
+        function showError(inputId, message) {
+            const input = document.getElementById(inputId);
+            const errorText = document.getElementById(inputId + 'Error');
+            input.classList.add('error-border');
+            errorText.innerText = message;
+            errorText.style.display = 'block';
         }
 
         // --- Supabase Integration ---
@@ -219,41 +214,73 @@
         });
 
         async function processSignUp() {
+            clearErrors();
+            let hasError = false;
+
             const name = document.getElementById('name').value.trim();
             const username = document.getElementById('username').value.trim();
-            const country = document.getElementById('country').value;
             const dob = document.getElementById('dob').value;
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+
+            // Basic Validation Checks
+            if(!name) { showError('name', 'Full Name is required.'); hasError = true; }
+            if(!username) { showError('username', 'Username is required.'); hasError = true; }
+            
+            if(!dob) { 
+                showError('dob', 'Date of Birth is required.'); hasError = true; 
+            } else {
+                const age = Math.abs(new Date(Date.now() - new Date(dob).getTime()).getUTCFullYear() - 1970);
+                if(age < 13) { showError('dob', 'You must be at least 13 years old.'); hasError = true; }
+            }
+            
+            if(!email) { showError('email', 'Email Address is required.'); hasError = true; }
+            
+            if(!password) { 
+                showError('password', 'Password is required.'); hasError = true; 
+            } else if(password.length < 6) { 
+                showError('password', 'Password must be at least 6 characters.'); hasError = true; 
+            }
+
+            // Stop if there are frontend errors
+            if(hasError) return;
+
             const btn = document.getElementById('regBtn');
-
-            // --- Validations ---
-            if(!name || !username || !dob || !email || !password) return showToast("All fields are required!", "error");
-            if(password.length < 6) return showToast("Password must be at least 6 characters long!", "error");
-
-            // Age Validation
-            const age = Math.abs(new Date(Date.now() - new Date(dob).getTime()).getUTCFullYear() - 1970);
-            if(age < 13) return showToast("You must be at least 13 years old to register!", "error");
-
             btn.disabled = true; btn.innerText = "Creating Account...";
 
-            // Register with user metadata
+            // Register
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
-                options: { data: { full_name: name, username: username, country: country, dob: dob } }
+                options: { data: { full_name: name, username: username, dob: dob } }
             });
 
             btn.disabled = false; btn.innerText = "Create Account";
 
             if(error) {
-                showToast(error.message, "error");
-            } else {
-                // BUG FIX: Check if email is already taken by checking identities array
-                if (data.user && data.user.identities && data.user.identities.length === 0) {
-                    showToast("This email is already registered! Please login.", "error");
+                // Supabase API errors
+                if(error.message.toLowerCase().includes('email') || error.message.toLowerCase().includes('invalid format')) {
+                    showError('email', error.message);
+                } else if(error.message.toLowerCase().includes('password')) {
+                    showError('password', error.message);
                 } else {
-                    showToast("Account created successfully! Redirecting to login...", "success");
+                    showError('email', error.message); // Fallback
+                }
+            } else {
+                // Check if email already exists silently
+                if (data.user && data.user.identities && data.user.identities.length === 0) {
+                    showError('email', 'This email is already registered! Please login.');
+                } else {
+                    // Success State
+                    const successBox = document.getElementById('successBox');
+                    successBox.style.display = 'block';
+                    successBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> Account created successfully! Redirecting...';
+                    
+                    // Hide the form to make it clean
+                    document.querySelector('.input-grid').style.display = 'none';
+                    btn.style.display = 'none';
+                    document.querySelector('.link').style.display = 'none';
+                    
                     setTimeout(() => window.location.href = "login.html", 2500);
                 }
             }
