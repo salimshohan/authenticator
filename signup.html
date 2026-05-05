@@ -9,72 +9,229 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        :root { --bg-body: #f8fafc; --bg-card: #ffffff; --primary: #4f46e5; --text-main: #0f172a; --border: #e2e8f0; }
-        body { background: var(--bg-body); font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh; align-items: center; }
+        /* --- GLOBAL STYLES --- */
+        :root { --bg-body: #f4f6f9; --primary: #4c46c9; --primary-hover: #322a96; --text-main: #333; --border: #ddd; --danger: #e74c3c; --success: #2ecc71; --warning: #f1c40f; }
+        body { margin: 0; padding-top: 80px; font-family: sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         * { box-sizing: border-box; outline: none; }
-        
-        nav { width: 100%; background: #fff; padding: 15px 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); }
-        .nav-brand { font-size: 1.4rem; font-weight: 800; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 8px; }
-        .nav-links { display: flex; gap: 20px; }
-        .nav-links a { color: var(--text-main); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.2s; }
-        .nav-links a:hover { color: var(--primary); }
-        .nav-links .active { color: var(--primary); border-bottom: 2px solid var(--primary); }
-        
-        .container { margin-top: 50px; width: 100%; max-width: 400px; padding: 20px; flex: 1; }
-        .card { background: var(--bg-card); padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border); }
-        
-        h2 { margin-top: 0; color: var(--text-main); margin-bottom: 10px; }
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; }
+
+        /* --- TIB HEADER STYLES (Direct Integration) --- */
+        header { width: 100%; background: linear-gradient(90deg, #564ad3, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; color: white; text-transform: uppercase; text-decoration: none; }
+        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; }
+        .hamburger { cursor: pointer; width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; z-index: 2001; background: rgba(255, 255, 255, 0.15); border-radius: 8px; transition: 0.3s; }
+        .hamburger:hover { background: rgba(255, 255, 255, 0.25); }
+        .hamburger span { display: block; height: 3px; width: 24px; background: white; border-radius: 2px; transition: 0.3s; }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); }
+        .mobile-menu.active { right: 0; }
+        .mobile-menu a { color: #333; text-decoration: none; padding: 15px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .mobile-menu a i { width: 25px; text-align: center; color: var(--primary); font-size: 18px; }
+        .mobile-menu a:hover, .mobile-menu a.active { background: #eff0f0; color: var(--primary); border-left: 4px solid var(--primary); }
+
+        /* --- SIGNUP FORM STYLES --- */
+        .container { width: 100%; max-width: 450px; padding: 20px; flex: 1; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
+        h2 { color: var(--text-main); margin-top: 0; margin-bottom: 5px; }
+        p.subtitle { color: #666; font-size: 0.9rem; margin-bottom: 25px; }
+
+        .input-group { position: relative; margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; transition: 0.3s; }
         input:focus { border-color: var(--primary); }
-        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn:hover { background: #4338ca; }
-        .link { display: block; margin-top: 15px; color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;}
         
-        footer { width: 100%; padding: 20px; text-align: center; background: #fff; border-top: 1px solid var(--border); color: #64748b; font-size: 0.9rem; }
+        .eye-icon { position: absolute; right: 15px; top: 38px; color: #888; cursor: pointer; font-size: 1.1rem; }
+        .eye-icon:hover { color: var(--primary); }
+
+        /* Password Strength */
+        .strength-bar { height: 5px; width: 100%; background: #eee; border-radius: 5px; margin-top: 8px; overflow: hidden; display: none;}
+        .strength-fill { height: 100%; width: 0%; transition: 0.3s; }
+        .strength-text { font-size: 0.8rem; margin-top: 5px; text-align: right; display: none;}
+
+        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px;}
+        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn:disabled { background: #999; cursor: not-allowed; transform: none; }
+        
+        .link { display: block; margin-top: 20px; color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;}
+
+        /* --- TOAST NOTIFICATION --- */
+        .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; transition: 0.4s; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .toast.show { bottom: 30px; }
+        .toast.error { background: var(--danger); }
+        .toast.success { background: var(--success); }
+
     </style>
 </head>
 <body>
 
-    <nav>
-        <a href="index.html" class="nav-brand"><i class="fa-solid fa-shield-halved"></i> TIB Vault</a>
-        <div class="nav-links">
-            <a href="login.html">Login</a>
-            <a href="signup.html" class="active">Sign Up</a>
+    <header>
+        <a href="/" class="brand-logo">
+            <img class="logo-icon" src="https://i.postimg.cc/44VPwf7L/tib-logo.jpg"> The Ironic Bro
+        </a>
+        <div class="hamburger" id="hamburgerBtn">
+            <span></span><span></span><span></span>
         </div>
-    </nav>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html"><i class="fa-solid fa-shield-halved"></i> Vault Dashboard</a>
+        <a href="login.html"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+        <a href="signup.html" class="active"><i class="fa-solid fa-user-plus"></i> Sign Up</a>
+    </div>
 
     <div class="container">
         <div class="card">
             <h2>Create Account</h2>
-            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 25px;">Secure your 2FA codes with Zero-Knowledge encryption.</p>
-            <input type="email" id="email" placeholder="Email Address">
-            <input type="password" id="password" placeholder="Create Password (Min 6 chars)">
-            <button class="btn" id="regBtn" onclick="signUp()">Create Account</button>
-            <a href="login.html" class="link">Already have an account? Login</a>
+            <p class="subtitle">Join The Ironic Bro Secure Vault</p>
+            
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" id="name" placeholder="Rubel Mahmud">
+            </div>
+
+            <div class="input-group">
+                <label>Date of Birth</label>
+                <input type="date" id="dob">
+            </div>
+
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="example@email.com">
+            </div>
+
+            <div class="input-group">
+                <label>Create Password</label>
+                <input type="password" id="password" placeholder="At least 6 characters" oninput="checkStrength()">
+                <i class="fa-solid fa-eye-slash eye-icon" id="togglePassword" onclick="togglePass()"></i>
+                
+                <div class="strength-bar" id="sBarBox"><div class="strength-fill" id="sFill"></div></div>
+                <div class="strength-text" id="sText">Weak</div>
+            </div>
+
+            <button class="btn" id="regBtn" onclick="processSignUp()">Create Account</button>
+            <a href="login.html" class="link">Already have an account? Login here.</a>
         </div>
     </div>
 
-    <footer>&copy; 2026 The Ironic Bro. All rights reserved.</footer>
+    <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText">Message</span></div>
 
     <script>
-        const supabaseClient = window.supabase.createClient('https://pykkprrhsxvfhcrhbiue.supabase.co', 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c');
+        // --- 1. Header Logic ---
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const mobileMenu = document.getElementById("mobileMenu");
+        
+        hamburgerBtn.addEventListener("click", () => {
+            hamburgerBtn.classList.toggle("active");
+            mobileMenu.classList.toggle("active");
+        });
 
+        document.addEventListener('click', (event) => {
+            if (!hamburgerBtn.contains(event.target) && !mobileMenu.contains(event.target) && mobileMenu.classList.contains('active')) {
+                hamburgerBtn.classList.remove("active");
+                mobileMenu.classList.remove("active");
+            }
+        });
+
+        // --- 2. Extra Feature: Password Toggle ---
+        function togglePass() {
+            const passInput = document.getElementById("password");
+            const icon = document.getElementById("togglePassword");
+            if(passInput.type === "password") {
+                passInput.type = "text";
+                icon.className = "fa-solid fa-eye eye-icon";
+            } else {
+                passInput.type = "password";
+                icon.className = "fa-solid fa-eye-slash eye-icon";
+            }
+        }
+
+        // --- 3. Extra Feature: Password Strength ---
+        function checkStrength() {
+            const pass = document.getElementById("password").value;
+            const barBox = document.getElementById("sBarBox");
+            const fill = document.getElementById("sFill");
+            const text = document.getElementById("sText");
+            
+            if(pass.length > 0) { barBox.style.display = "block"; text.style.display = "block"; } 
+            else { barBox.style.display = "none"; text.style.display = "none"; return; }
+
+            let strength = 0;
+            if(pass.length >= 6) strength += 1;
+            if(pass.match(/[A-Z]/)) strength += 1;
+            if(pass.match(/[0-9]/)) strength += 1;
+            if(pass.match(/[^a-zA-Z0-9]/)) strength += 1;
+
+            if(strength <= 1) { fill.style.width = "33%"; fill.style.background = "var(--danger)"; text.innerText = "Weak Password"; text.style.color = "var(--danger)"; }
+            else if(strength === 2 || strength === 3) { fill.style.width = "66%"; fill.style.background = "var(--warning)"; text.innerText = "Good Password"; text.style.color = "#d4ac0d"; }
+            else { fill.style.width = "100%"; fill.style.background = "var(--success)"; text.innerText = "Strong Password"; text.style.color = "var(--success)"; }
+        }
+
+        // --- 4. Custom Toast System (No Alerts) ---
+        function showToast(msg, type = "error") {
+            const toast = document.getElementById("toastMsg");
+            const icon = document.getElementById("toastIcon");
+            document.getElementById("toastText").innerText = msg;
+            
+            toast.className = "toast"; // reset classes
+            if(type === "error") { toast.classList.add("error"); icon.className = "fa-solid fa-circle-exclamation"; }
+            else { toast.classList.add("success"); icon.className = "fa-solid fa-circle-check"; }
+            
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 4000);
+        }
+
+        // --- 5. Supabase Integration ---
+        const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Auto-redirect if logged in
         document.addEventListener('DOMContentLoaded', async () => {
             const { data } = await supabaseClient.auth.getSession();
             if (data.session) window.location.href = "index.html";
         });
 
-        async function signUp() {
-            const email = document.getElementById('email').value;
+        async function processSignUp() {
+            const name = document.getElementById('name').value.trim();
+            const dob = document.getElementById('dob').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            if(!email || !password) return alert("Fill all fields!");
-            if(password.length < 6) return alert("Password must be at least 6 characters.");
+            const btn = document.getElementById('regBtn');
 
-            document.getElementById('regBtn').innerText = "Creating...";
-            const { error } = await supabaseClient.auth.signUp({email, password});
-            
-            if(error) { alert(error.message); document.getElementById('regBtn').innerText = "Create Account"; }
-            else { alert("Success! Redirecting to login..."); window.location.href = "login.html"; }
+            // --- Smart Validations ---
+            if(!name || !dob || !email || !password) return showToast("Shob gulo box puron kora baddhotamulok!", "error");
+            if(password.length < 6) return showToast("Password kompokkhe 6 character hote hobe!", "error");
+
+            // Age Validation
+            const dobDate = new Date(dob);
+            const ageDifMs = Date.now() - dobDate.getTime();
+            const ageDate = new Date(ageDifMs);
+            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            if(age < 13) return showToast("Apnar boyosh kompokkhe 13 bochor hote hobe!", "error");
+
+            btn.disabled = true; btn.innerText = "Creating Account...";
+
+            // Register with user metadata (name & dob)
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: { data: { full_name: name, dob: dob } }
+            });
+
+            btn.disabled = false; btn.innerText = "Create Account";
+
+            if(error) {
+                // If email already exists, Supabase returns specific errors
+                if(error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("user already exists")) {
+                    showToast("Ei email diye age thekei ekta account khola ache! Doya kore Login korun.", "error");
+                } else {
+                    showToast(error.message, "error");
+                }
+            } else {
+                showToast("Account successfully toiri hoyeche! Login form e niye jacchi...", "success");
+                setTimeout(() => window.location.href = "login.html", 2500);
+            }
         }
     </script>
 </body>
