@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2FA Vault | The Ironic Bro</title>
     
+    <script>
+        window.onerror = function(msg, url, line) {
+            const ls = document.getElementById('loadingScreen');
+            if(ls) {
+                ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem; margin-bottom:10px;"></i><br>
+                    SYSTEM CRASHED!<br><br>
+                    Error: ${msg}<br>Line: ${line}<br><br>
+                    <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold;">Go to Login Page</button>
+                </div>`;
+            }
+            return false;
+        };
+    </script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -76,13 +91,13 @@
         .timer-bg { fill: white; stroke: #e2e8f0; stroke-width: 5; }
         .timer-progress {
             fill: none; stroke: var(--success); stroke-width: 5;
-            stroke-dasharray: 172.7; 
+            stroke-dasharray: 172.8; 
             stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s;
             stroke-linecap: round;
         }
         .timer-text {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-weight: 800; font-size: 1rem; color: var(--text-main);
+            font-weight: 800; font-size: 1rem; color: var(--text-main); transition: 0.3s;
         }
         .timer-container.danger .timer-progress { stroke: var(--danger); }
         .timer-container.danger .timer-text { color: var(--danger); }
@@ -183,49 +198,56 @@
     <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText"></span></div>
 
     <script>
-        // --- 1. HARD FALLBACK TIMER (Fixes Infinite Loading) ---
-        // Jodi kono karone script crash kore, 3 second por auto login page e pathabe
-        const fallbackTimer = setTimeout(() => {
-            const loadingScreen = document.getElementById('loadingScreen');
-            if (loadingScreen && loadingScreen.style.display !== 'none') {
-                window.location.href = "login.html";
-            }
-        }, 3000);
-
-        // --- Core Variables ---
         let supabase;
         let masterPin = null, accounts = [], currentUser = null, timerInterval, isEditMode = false, editingId = null;
 
+        // --- Core Init Logic ---
         async function initApp() {
+            const fallbackTimeout = setTimeout(() => {
+                const ls = document.getElementById('loadingScreen');
+                if(ls && ls.style.display !== 'none') {
+                    ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
+                        Connection Timeout! Supabase blocked.<br><br>
+                        <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Force Login</button>
+                    </div>`;
+                }
+            }, 5000);
+
             try {
-                // Initialize Supabase Inside Try Block for maximum safety
                 const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
                 const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c';
+                
+                if (typeof window.supabase === 'undefined') throw new Error("Supabase Library failed to load.");
+                
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
                 const { data, error } = await supabase.auth.getSession();
                 
                 if (error) throw error;
                 
+                clearTimeout(fallbackTimeout);
+
                 if (!data || !data.session) {
-                    window.location.href = "login.html";
+                    window.location.replace("login.html");
                     return;
                 }
 
-                // Session Success! Stop the fallback timer.
-                clearTimeout(fallbackTimer);
-                
                 currentUser = data.session.user.id;
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('pinScreen').style.display = 'block';
 
             } catch (err) {
-                console.error("Initialization Failed:", err);
-                window.location.href = "login.html";
+                clearTimeout(fallbackTimeout);
+                console.error("Init Error:", err);
+                const ls = document.getElementById('loadingScreen');
+                if(ls) {
+                    ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
+                        Network/CORS Error!<br><span style="font-size:0.8rem; color:#64748b;">Check if your GitHub URL is allowed in Supabase.</span><br><br>
+                        <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Go to Login</button>
+                    </div>`;
+                }
             }
         }
 
-        // Run Initialization on Load
         initApp();
 
         // --- Menu Logic ---
@@ -361,8 +383,8 @@
                 // Update SVG Ring
                 const ring = document.getElementById('timerRing');
                 const timerCont = document.getElementById('floatingTimer');
-                const offset = (rem / 30) * 172.7;
-                ring.style.strokeDashoffset = 172.7 - offset;
+                const offset = (rem / 30) * 172.8;
+                ring.style.strokeDashoffset = 172.8 - offset;
                 document.getElementById('timerNum').innerText = rem;
 
                 if(rem <= 5) timerCont.classList.add('danger');
