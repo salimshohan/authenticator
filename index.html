@@ -24,11 +24,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.2.2/otpauth.umd.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     
     <style>
         /* --- GLOBAL STYLES --- */
-        :root { --bg-body: #f8fafc; --primary: #4f46e5; --primary-hover: #4338ca; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --bg-card: #ffffff; }
+        :root { --bg-body: #f8fafc; --primary: #4f46e5; --primary-hover: #4338ca; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --bg-card: #ffffff; }
         body { margin: 0; padding-top: 80px; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         * { box-sizing: border-box; outline: none; }
         .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
@@ -44,11 +44,13 @@
         .hamburger.active span:nth-child(2) { opacity: 0; }
         .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
         
-        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
+        /* UPDATED NAV MENU */
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; padding-bottom: 20px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
         .mobile-menu.active { right: 0; }
-        .mobile-menu a { color: #333; text-decoration: none; padding: 15px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; }
+        .mobile-menu a { color: #333; text-decoration: none; padding: 12px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; }
         .mobile-menu a i { width: 25px; text-align: center; color: var(--primary); font-size: 18px; }
         .mobile-menu a:hover, .mobile-menu a.active { background: #eff0f0; color: var(--primary); border-left: 4px solid var(--primary); }
+        .menu-section-title { padding: 15px 25px 5px; font-size: 0.75rem; color: #94a3b8; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 
         /* --- LOADING SCREEN --- */
         #loadingScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 100px; text-align: center;}
@@ -125,6 +127,7 @@
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; transition: 0.4s; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .toast.show { bottom: 30px; }
         .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); }
         .toast.success { background: var(--success); }
     </style>
 </head>
@@ -138,12 +141,23 @@
     </header>
 
     <div class="mobile-menu" id="mobileMenu">
-        <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; font-weight: bold;">VAULT MENU</div>
+        <div class="menu-section-title">Main Vault</div>
         <a href="index.html" class="active"><i class="fa-solid fa-house"></i> Dashboard</a>
         <a href="profile.html"><i class="fa-solid fa-circle-user"></i> My Profile</a>
         <a href="import-export.html"><i class="fa-solid fa-file-export"></i> Import / Export</a>
+        <a href="change-pin.html"><i class="fa-solid fa-shield-keyhole"></i> Change Master PIN</a>
         <a href="settings.html"><i class="fa-solid fa-gear"></i> App Settings</a>
-        <a onclick="logOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        
+        <div class="menu-section-title">Support & Info</div>
+        <a href="faq.html"><i class="fa-solid fa-clipboard-question"></i> Help & FAQ</a>
+        <a href="about.html"><i class="fa-solid fa-circle-info"></i> About App</a>
+        <a href="contact.html"><i class="fa-solid fa-envelope-open-text"></i> Contact Us</a>
+        <a href="privacy-policy.html"><i class="fa-solid fa-file-shield"></i> Privacy Policy</a>
+        <a href="terms.html"><i class="fa-solid fa-scale-balanced"></i> Terms of Service</a>
+        
+        <div style="margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 5px;">
+            <a onclick="logOut()" style="color: var(--danger);"><i class="fa-solid fa-right-from-bracket"></i> Logout Securely</a>
+        </div>
     </div>
 
     <div class="container">
@@ -305,10 +319,19 @@
             finally { btn.disabled = false; }
         }
 
-        // --- RESET VAULT (FIXED CACHE ISSUE) ---
+        // --- 1. RESET VAULT FIX (100% working alert and data wipe) ---
         async function confirmVaultReset() {
-            const check = prompt("🚨 DANGER ZONE 🚨\n\nResetting your PIN will permanently DELETE ALL your saved 2FA codes. They cannot be recovered.\n\nType 'DELETE' in all caps below to confirm:");
-            if(check !== "DELETE") { if(check !== null) showToast("Reset Cancelled.", "success"); return; }
+            // Trim spaces and convert to uppercase to prevent accidental mismatches
+            let check = prompt("🚨 DANGER ZONE 🚨\n\nType 'DELETE' in all caps below to permanently wipe your vault:");
+            
+            if (check === null) {
+                // User pressed Cancel
+                return; 
+            }
+            if (check.trim().toUpperCase() !== "DELETE") {
+                showToast("Reset Cancelled: Incorrect spelling.", "warning");
+                return;
+            }
 
             document.getElementById('unlockPinScreen').style.display = 'none';
             document.getElementById('loadingScreen').style.display = 'flex';
@@ -322,16 +345,15 @@
                 const { error: upErr } = await supabaseClient.auth.updateUser({ data: { pin_setup: false } });
                 if(upErr) throw upErr;
                 
-                await supabaseClient.auth.refreshSession(); // Force session refresh
                 showToast("Vault Reset Complete!", "success");
                 setTimeout(() => window.location.reload(), 1500);
             } catch(e) {
-                showToast(e.message || "Failed to reset", "error");
+                showToast("Failed to reset. Try again.", "error");
                 setTimeout(() => window.location.reload(), 2000);
             }
         }
 
-        // --- QR SCANNER (FIXED FOR CAMERA & FILE) ---
+        // --- 2. QR SCANNER FIX (Camera + Image Upload) ---
         function openQrModal() {
             document.getElementById('qrModal').style.display = 'flex';
             html5QrCode = new Html5Qrcode("qrReader");
@@ -341,20 +363,36 @@
 
         function closeQrModal() {
             document.getElementById('qrModal').style.display = 'none';
-            document.getElementById('qrImageUpload').value = ''; // Reset file
+            document.getElementById('qrImageUpload').value = '';
             if(html5QrCode) {
                 html5QrCode.stop().then(() => html5QrCode.clear()).catch(e => console.log(e));
+                html5QrCode = null;
             }
         }
 
         function handleQrImageUpload(e) {
             if (e.target.files.length == 0) return;
             const imageFile = e.target.files[0];
-            
+            showToast("Scanning image...", "success");
+
+            // Stop camera if running, then scan file
+            if(html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => { scanFileLogic(imageFile); }).catch(err => { scanFileLogic(imageFile); });
+            } else {
+                scanFileLogic(imageFile);
+            }
+        }
+
+        function scanFileLogic(imageFile) {
             if(!html5QrCode) html5QrCode = new Html5Qrcode("qrReader");
             html5QrCode.scanFile(imageFile, true)
-                .then(decodedText => { onScanSuccess(decodedText); })
-                .catch(err => { showToast("No valid QR code found in image.", "error"); document.getElementById('qrImageUpload').value = '';});
+                .then(decodedText => { 
+                    onScanSuccess(decodedText); 
+                })
+                .catch(err => { 
+                    showToast("No valid QR found in image.", "error"); 
+                    document.getElementById('qrImageUpload').value = '';
+                });
         }
 
         function onScanSuccess(decodedText) {
@@ -376,7 +414,7 @@
             } catch(e) { showToast("Invalid 2FA QR Code format.", "error"); }
         }
 
-        // --- APP LOGIC (EDIT FIX VIA INDEX) ---
+        // --- 3. EDIT FIX (Passing ID properly) ---
         async function saveSecret() {
             const brandInput = document.getElementById('brandInput');
             const secretInput = document.getElementById('secretKeyInput');
@@ -394,7 +432,7 @@
             
             try {
                 if(editingId) {
-                    // Update by ID directly
+                    // Update database
                     const { error } = await supabaseClient.from('user_2fa_secrets').update({ brand: brand, username: user, encrypted_secret: enc }).eq('id', editingId);
                     if(error) throw error;
                     showToast("Updated Successfully!");
@@ -427,7 +465,7 @@
                             <div class="next-code-box" onclick="copyCode('next-code-${i}', true)"><span class="next-label">Next Code</span><span class="next-text" id="next-code-${i}">--- ---</span></div>
                         </div>
                         <div class="acc-edit-bar ${isEditMode ? 'active' : ''}">
-                            <button class="btn-icon" onclick="triggerEdit(${i})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="btn-icon" onclick="triggerEdit('${acc.id}')" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
                             <button class="btn-icon del" onclick="deleteAcc('${acc.id}')" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>`);
@@ -458,12 +496,15 @@
 
         function toggleEditMode() { isEditMode = !isEditMode; document.getElementById('editModeTxt').innerText = isEditMode ? "Done" : "Organize"; renderAccounts(); }
 
-        // FIXED EDIT FUNCTION (Passes Index instead of String ID)
-        function triggerEdit(index) {
-            editingId = accounts[index].id;
-            document.getElementById('brandInput').value = accounts[index].brand;
-            document.getElementById('userInput').value = accounts[index].username;
-            document.getElementById('secretKeyInput').value = accounts[index].secret;
+        // --- FIND ACCOUNT BY ID AND EDIT ---
+        function triggerEdit(id) {
+            const accToEdit = accounts.find(a => a.id === id);
+            if(!accToEdit) return;
+            
+            editingId = accToEdit.id;
+            document.getElementById('brandInput').value = accToEdit.brand;
+            document.getElementById('userInput').value = accToEdit.username;
+            document.getElementById('secretKeyInput').value = accToEdit.secret;
             document.getElementById('btnText').innerText = "Update";
             document.getElementById('cancelEditBtn').style.display = "block";
             document.getElementById('addFormCard').scrollIntoView({ behavior: 'smooth' });
@@ -491,6 +532,7 @@
         function showToast(m, type="success") {
             const t = document.getElementById('toastMsg'); document.getElementById('toastText').innerText = m; t.className = `toast show ${type}`;
             if(type === "error") document.getElementById('toastIcon').className = "fa-solid fa-circle-exclamation";
+            else if(type === "warning") document.getElementById('toastIcon').className = "fa-solid fa-triangle-exclamation";
             else document.getElementById('toastIcon').className = "fa-solid fa-circle-check";
             setTimeout(() => t.classList.remove('show'), 3000);
         }
