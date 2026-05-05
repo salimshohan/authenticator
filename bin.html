@@ -84,7 +84,13 @@
         <a href="index.html"><i class="fa-solid fa-house"></i> Dashboard</a>
         <a href="profile.html"><i class="fa-solid fa-circle-user"></i> My Profile</a>
         <a href="bin.html" class="active"><i class="fa-solid fa-trash-arrow-up"></i> Recycle Bin</a>
+        <a href="import-export.html"><i class="fa-solid fa-file-export"></i> Import / Export</a>
+        <a href="change-pin.html"><i class="fa-solid fa-lock"></i> Change Master PIN</a>
         <a href="settings.html"><i class="fa-solid fa-gear"></i> App Settings</a>
+        
+        <div class="menu-section-title">Support & Info</div>
+        <a href="faq.html"><i class="fa-solid fa-clipboard-question"></i> Help & FAQ</a>
+        <a href="about.html"><i class="fa-solid fa-circle-info"></i> About App</a>
         
         <div style="margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 5px;">
             <a onclick="logOut()" style="color: var(--danger);"><i class="fa-solid fa-right-from-bracket"></i> Logout Securely</a>
@@ -119,8 +125,6 @@
         let supabaseClient;
         let binAccounts = [], currentUser = null;
         
-        // Settings configuration (Default 30 days)
-        // Poreo settings page e giye localStorage.setItem('bin_retention_days', 15) korle eta auto change hoye jabe
         const RETENTION_DAYS = parseInt(localStorage.getItem('bin_retention_days')) || 30;
 
         function toggleMenu() { 
@@ -140,8 +144,6 @@
                 currentUser = data.session.user.id;
                 document.getElementById('retentionDaysText').innerText = RETENTION_DAYS;
                 
-                // No need for PIN in Bin since we are not decrypting the secrets here.
-                // We just show brand names and remaining days.
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('appScreen').style.display = 'block';
                 fetchBinData();
@@ -164,7 +166,6 @@
                 const validBinItems = [];
                 const expiredIds = [];
 
-                // Check expired items
                 data.forEach(row => {
                     let daysLeft = RETENTION_DAYS;
                     
@@ -176,7 +177,7 @@
                     }
 
                     if (daysLeft <= 0) {
-                        expiredIds.push(row.id); // Time is up, mark for hard delete
+                        expiredIds.push(row.id); 
                     } else {
                         validBinItems.push({ id: row.id, brand: row.brand, username: row.username, daysLeft: daysLeft });
                     }
@@ -184,7 +185,6 @@
 
                 binAccounts = validBinItems;
 
-                // Auto-delete expired items silently from database
                 if(expiredIds.length > 0) {
                     await supabaseClient.from('user_2fa_secrets').delete().in('id', expiredIds);
                     console.log(`Auto-deleted ${expiredIds.length} expired items.`);
@@ -239,7 +239,6 @@
 
         async function restoreAcc(id) {
             try {
-                // Remove deleted_at and set is_deleted to false
                 const { error } = await supabaseClient.from('user_2fa_secrets')
                     .update({ is_deleted: false, deleted_at: null })
                     .eq('id', id);
@@ -247,7 +246,6 @@
                 
                 showToast("Code Restored!");
                 
-                // Remove from local array and re-render without network call
                 binAccounts = binAccounts.filter(a => a.id !== id);
                 renderBin();
             } catch(e) {
