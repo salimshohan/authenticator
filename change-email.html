@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Email | The Ironic Bro</title>
+    
+    <script>
+        window.onerror = function(msg, url, line) {
+            const ls = document.getElementById('loadingScreen');
+            if(ls) {
+                ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem; margin-bottom:10px;"></i><br>
+                    SYSTEM CRASHED!<br><br>
+                    Error: ${msg}<br>Line: ${line}<br><br>
+                    <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Go to Login Page</button>
+                </div>`;
+            }
+            return false;
+        };
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* --- GLOBAL STYLES --- */
+        :root { --bg-body: #f8fafc; --primary: #4f46e5; --primary-hover: #4338ca; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --bg-card: #ffffff; }
+        body { margin: 0; padding-top: 80px; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        * { box-sizing: border-box; outline: none; }
+
+        .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+
+        /* --- HEADER STYLES --- */
+        header { width: 100%; background: linear-gradient(90deg, #564ad3, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; color: white; text-transform: uppercase; text-decoration: none; }
+        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; }
+        .hamburger { cursor: pointer; width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; z-index: 2001; background: rgba(255, 255, 255, 0.15); border-radius: 8px; transition: 0.3s; }
+        .hamburger:hover { background: rgba(255, 255, 255, 0.25); }
+        .hamburger span { display: block; height: 3px; width: 24px; background: white; border-radius: 2px; transition: 0.3s; }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
+        
+        /* Mobile Menu */
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
+        .mobile-menu.active { right: 0; }
+        .mobile-menu a { color: #333; text-decoration: none; padding: 15px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; }
+        .mobile-menu a i { width: 25px; text-align: center; color: var(--primary); font-size: 18px; }
+        .mobile-menu a:hover, .mobile-menu a.active { background: #eff0f0; color: var(--primary); border-left: 4px solid var(--primary); }
+
+        /* --- LOADING SCREEN --- */
+        #loadingScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 100px; text-align: center;}
+        .spinner { border: 6px solid #e2e8f0; border-top: 6px solid var(--primary); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- CARDS & UI --- */
+        .container { width: 100%; max-width: 450px; padding: 20px; flex: 1; margin-bottom: 40px;}
+        .card { background: white; padding: 35px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border); }
+        .primary-text { color: var(--primary) !important; font-weight: 700; margin-top: 0; margin-bottom: 5px; font-size: 1.5rem;}
+        .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
+
+        /* --- INPUTS --- */
+        .input-group { position: relative; text-align: left; margin-bottom: 25px; width: 100%; }
+        .floating-input { position: relative; width: 100%; }
+        .floating-input input {
+            width: 100%; padding: 16px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem;
+            background: transparent; color: var(--text-main); transition: 0.3s;
+        }
+        .floating-input input:disabled { background: #f8fafc; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; }
+        .floating-input label {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            background: var(--bg-card); padding: 0 6px; color: #64748b; font-size: 1rem;
+            pointer-events: none; transition: 0.2s ease all; display: flex; align-items: center; gap: 6px;
+        }
+        .floating-input input:disabled ~ label { background: transparent; color: #94a3b8; }
+        .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
+        .floating-input input:focus { border-color: var(--primary); }
+        .floating-input input.error-border { border-color: var(--danger) !important; }
+        .floating-input input.error-border ~ label { color: var(--danger) !important; }
+
+        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;}
+        .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none;}
+
+        /* Alert/Info Box */
+        .info-box { background: #eff6ff; color: #3730a3; padding: 15px; border-radius: 8px; border: 1px solid #c7d2fe; text-align: left; margin-bottom: 25px; font-size: 0.85rem; font-weight: 500; line-height: 1.5; }
+        .success-box { display: none; background: #f0fdf4; color: #065f46; padding: 25px; border-radius: 12px; border: 2px solid #34d399; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
+        .success-icon { font-size: 3rem; color: var(--success); margin-bottom: 15px; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; transition: 0.4s; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .toast.show { bottom: 30px; }
+        .toast.error { background: var(--danger); }
+        .toast.success { background: var(--success); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="brand-logo">
+            <img class="logo-icon" src="https://i.postimg.cc/44VPwf7L/tib-logo.jpg"> The Ironic Bro
+        </a>
+        <div class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; font-weight: bold;">VAULT MENU</div>
+        <a href="index.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="profile.html"><i class="fa-solid fa-circle-user"></i> My Profile</a>
+        <a href="change-email.html" class="active"><i class="fa-solid fa-envelope"></i> Change Email</a>
+        <a href="change-password.html"><i class="fa-solid fa-key"></i> Change Password</a>
+        <a href="settings.html"><i class="fa-solid fa-gear"></i> App Settings</a>
+        <a onclick="logOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+
+    <div class="container">
+        <div id="loadingScreen">
+            <div class="spinner"></div>
+            <div style="color:var(--primary); font-weight:bold; font-size:1.2rem;">Verifying Session...</div>
+        </div>
+
+        <div class="card" id="mainScreen" style="display:none;">
+            
+            <div class="success-box" id="successBox">
+                <i class="fa-solid fa-envelope-circle-check success-icon"></i>
+                <h3 style="margin-top: 0; color: #064e3b;">Check Your Inbox</h3>
+                <p style="font-size: 0.95rem; line-height: 1.5; color: #065f46; margin-bottom: 20px;">
+                    We have sent a verification link to your <strong>new email address</strong>.<br><br>
+                    Please click the link in that email to confirm the change. Until then, your old email will remain active.
+                </p>
+                <button class="btn" onclick="window.location.href='profile.html'">Back to Profile</button>
+            </div>
+
+            <div id="formSection">
+                <i class="fa-solid fa-at" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
+                <h2 class="primary-text">Change Email</h2>
+                <p class="subtitle">Update your account email address.</p>
+
+                <div class="info-box">
+                    <i class="fa-solid fa-circle-info"></i> <strong>Note:</strong> After updating, a confirmation link will be sent to your new email. Your email won't change until you click that link.
+                </div>
+
+                <div class="input-group">
+                    <div class="floating-input">
+                        <input type="email" id="currentEmail" placeholder=" " disabled>
+                        <label><i class="fa-solid fa-envelope-open"></i> Current Email</label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="floating-input">
+                        <input type="email" id="newEmail" placeholder=" ">
+                        <label><i class="fa-solid fa-envelope"></i> New Email Address</label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="floating-input">
+                        <input type="email" id="confirmEmail" placeholder=" ">
+                        <label><i class="fa-solid fa-check-double"></i> Confirm New Email</label>
+                    </div>
+                </div>
+
+                <button class="btn" id="saveBtn" onclick="updateEmail()">
+                    <i class="fa-solid fa-paper-plane" id="btnIcon"></i> <span id="btnText">Send Verification Link</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText"></span></div>
+
+    <script>
+        let supabaseClient;
+        let currentUser = null;
+
+        // --- Core Init Logic ---
+        async function initApp() {
+            const fallbackTimeout = setTimeout(() => {
+                const ls = document.getElementById('loadingScreen');
+                if(ls && ls.style.display !== 'none') {
+                    ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
+                        Connection Timeout!<br><br>
+                        <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Force Login</button>
+                    </div>`;
+                }
+            }, 5000);
+
+            try {
+                const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
+                const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c';
+                
+                if (typeof window.supabase === 'undefined') throw new Error("Supabase failed to load.");
+                
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const { data, error } = await supabaseClient.auth.getUser();
+                
+                if (error) throw error;
+                clearTimeout(fallbackTimeout);
+
+                if (!data || !data.user) {
+                    window.location.replace("login.html");
+                    return;
+                }
+
+                currentUser = data.user;
+                document.getElementById('currentEmail').value = currentUser.email;
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainScreen').style.display = 'block';
+
+            } catch (err) {
+                clearTimeout(fallbackTimeout);
+                window.location.replace("login.html");
+            }
+        }
+
+        initApp();
+
+        // --- Menu Logic ---
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const mobileMenu = document.getElementById("mobileMenu");
+        hamburgerBtn.addEventListener("click", () => { hamburgerBtn.classList.toggle("active"); mobileMenu.classList.toggle("active"); });
+
+        // --- Update Email Logic ---
+        async function updateEmail() {
+            const email1Input = document.getElementById('newEmail');
+            const email2Input = document.getElementById('confirmEmail');
+            const email1 = email1Input.value.trim();
+            const email2 = email2Input.value.trim();
+
+            email1Input.classList.remove('error-border');
+            email2Input.classList.remove('error-border');
+
+            if(!email1 || !email2) {
+                if(!email1) email1Input.classList.add('error-border');
+                if(!email2) email2Input.classList.add('error-border');
+                return showToast("Both fields are required!", "error");
+            }
+
+            // Basic email validation regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if(!emailRegex.test(email1)) {
+                email1Input.classList.add('error-border');
+                return showToast("Please enter a valid email address.", "error");
+            }
+
+            if(email1 !== email2) {
+                email2Input.classList.add('error-border');
+                return showToast("Email addresses do not match!", "error");
+            }
+
+            if(email1.toLowerCase() === currentUser.email.toLowerCase()) {
+                email1Input.classList.add('error-border');
+                return showToast("This is already your current email.", "error");
+            }
+
+            const btn = document.getElementById('saveBtn');
+            const btnIcon = document.getElementById('btnIcon');
+            const btnText = document.getElementById('btnText');
+            
+            btn.disabled = true;
+            btnIcon.className = "fa-solid fa-circle-notch fa-spin";
+            btnText.innerText = "Sending Link...";
+
+            try {
+                // Supabase API to update user email
+                const { data, error } = await supabaseClient.auth.updateUser({
+                    email: email1
+                });
+
+                if (error) throw error;
+
+                // Show Success Screen
+                document.getElementById('formSection').style.display = 'none';
+                document.getElementById('successBox').style.display = 'block';
+
+            } catch (error) {
+                showToast(error.message, "error");
+            } finally {
+                btn.disabled = false;
+                btnIcon.className = "fa-solid fa-paper-plane";
+                btnText.innerText = "Send Verification Link";
+            }
+        }
+
+        function showToast(m, type="success") {
+            const t = document.getElementById('toastMsg');
+            const icon = document.getElementById('toastIcon');
+            document.getElementById('toastText').innerText = m;
+            
+            t.className = `toast show ${type}`;
+            if(type === "error") icon.className = "fa-solid fa-circle-exclamation";
+            else icon.className = "fa-solid fa-circle-check";
+            
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function logOut() { 
+            try { await supabaseClient.auth.signOut(); } catch(e){} 
+            window.location.replace("login.html"); 
+        }
+    </script>
+</body>
+</html>
