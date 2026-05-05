@@ -34,17 +34,18 @@
         .mobile-menu a i { width: 25px; text-align: center; color: var(--primary); font-size: 18px; }
         .mobile-menu a:hover, .mobile-menu a.active { background: #eff0f0; color: var(--primary); border-left: 4px solid var(--primary); }
 
+        /* --- LOADING SCREEN --- */
+        #loadingScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 100px; text-align: center;}
+        .spinner { border: 6px solid #e2e8f0; border-top: 6px solid var(--primary); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 1.3rem; font-weight: bold; color: var(--primary); margin-bottom: 5px;}
+        .loading-subtext { color: #64748b; font-size: 0.9rem;}
+
         /* --- APP CONTAINERS & CARDS --- */
         .container { width: 100%; max-width: 500px; padding: 20px; flex: 1; margin-bottom: 40px;}
         .card { background: white; padding: 35px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border: 1px solid var(--border); }
         h2 { color: var(--text-main); margin-top: 0; margin-bottom: 5px; }
         p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
-
-        /* --- LOADING SCREEN UI --- */
-        .loading-screen { text-align: center; padding: 60px 20px; }
-        .loading-spinner { font-size: 4.5rem; color: var(--primary); margin-bottom: 25px; }
-        .loading-title { font-size: 1.4rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; }
-        .loading-subtitle { font-size: 0.95rem; color: #64748b; }
 
         /* --- MODERN OUTLINE INPUTS --- */
         .input-group { position: relative; text-align: left; margin-bottom: 20px; width: 100%; }
@@ -63,7 +64,6 @@
         .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
         .floating-input input.error-border { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
         .floating-input input.error-border ~ label { color: var(--danger) !important; }
-        .error-text { color: var(--danger); font-size: 0.8rem; font-weight: 600; margin-top: 6px; display: none; padding-left: 5px;}
 
         /* Buttons */
         .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 10px;}
@@ -116,7 +116,6 @@
     <div class="mobile-menu" id="mobileMenu">
         <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Main Menu</div>
         <a href="index.html" class="active"><i class="fa-solid fa-shield-halved"></i> 2FA Vault</a>
-        <a href="password-generator.html"><i class="fa-solid fa-key"></i> Password Generator</a>
         
         <div style="padding: 20px 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Account</div>
         <a href="profile.html"><i class="fa-solid fa-circle-user"></i> Profile</a>
@@ -126,10 +125,10 @@
 
     <div class="container">
         
-        <div class="loading-screen" id="loadingScreen">
-            <i class="fa-solid fa-circle-notch fa-spin loading-spinner"></i>
-            <div class="loading-title">Connecting to Vault...</div>
-            <div class="loading-subtitle">Verifying security credentials</div>
+        <div id="loadingScreen">
+            <div class="spinner"></div>
+            <div class="loading-text">Connecting to Vault...</div>
+            <div class="loading-subtext">Verifying security credentials</div>
         </div>
 
         <div class="card" id="pinScreen">
@@ -175,13 +174,13 @@
                     </div>
                 </div>
 
-                <button class="btn" onclick="addSecret()">
-                    <i class="fa-solid fa-floppy-disk"></i> Save Securely
+                <button class="btn" id="addBtn" onclick="addSecret()">
+                    <i class="fa-solid fa-floppy-disk" id="addIcon"></i> <span id="addText">Save Securely</span>
                 </button>
                 <div style="font-size:0.8rem; margin-top:10px; color:var(--text-muted); text-align: center;" id="slotCounter">Slots available: 50/50</div>
             </div>
 
-            <div class="timer-box">
+            <div class="timer-box" id="timerBox" style="display: none;">
                 <div style="display:flex; justify-content:space-between; font-weight:600; font-size:0.85rem; color:var(--text-muted);">
                     <span><i class="fa-solid fa-stopwatch"></i> Codes valid for:</span>
                     <span id="countdownText">30s</span>
@@ -233,32 +232,33 @@
 
         let masterPin = null, accounts = [], currentUser = null, timerInterval;
 
-        // --- App Init & Auth Guard with Error Handling ---
-        document.addEventListener('DOMContentLoaded', async () => {
+        // --- EXTREMELY SAFE APP INIT (Fixes Infinite Loading) ---
+        window.onload = async function() {
             try {
+                // Check Session
                 const { data, error } = await supabaseClient.auth.getSession();
                 
-                if (error) throw error;
+                if (error) throw error; // If network fails, go to catch block
 
-                // Connection successful, hide loader
-                document.getElementById('loadingScreen').style.display = 'none';
-
-                if (!data.session) {
-                    // Kick back to login if no session
-                    window.location.href = "login.html";
-                } else {
-                    currentUser = data.session.user.id;
-                    document.getElementById('pinScreen').style.display = 'block';
+                if (!data || !data.session) {
+                    // No session found, kick to login securely
+                    window.location.replace("login.html");
+                    return;
                 }
-            } catch (err) {
-                // If connection fails (e.g. CORS block due to wrong URL)
+
+                // Session found! 
+                currentUser = data.session.user.id;
+                
+                // Hide Loading & Show PIN screen
                 document.getElementById('loadingScreen').style.display = 'none';
-                showToast("Connection Error! Verify your Supabase Site URL.", "error");
+                document.getElementById('pinScreen').style.display = 'block';
+
+            } catch (err) {
                 console.error("Auth Error:", err);
-                // Fallback to login page after 2 seconds
-                setTimeout(() => { window.location.href = "login.html"; }, 2500);
+                // If anything crashes, don't stay stuck on loading. Kick to login.
+                window.location.replace("login.html");
             }
-        });
+        };
 
         // --- Core App Functions ---
         async function unlockVault() {
@@ -269,57 +269,84 @@
             const btn = document.getElementById('unlockBtn'), btnIcon = document.getElementById('unlockIcon'), btnText = document.getElementById('unlockText');
             btn.disabled = true; btnIcon.className = "fa-solid fa-circle-notch fa-spin"; btnText.innerText = "Decrypting...";
             
-            const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
-            
-            btn.disabled = false; btnIcon.className = "fa-solid fa-unlock-keyhole"; btnText.innerText = "Unlock Vault";
-            
-            if(error) return showToast("Failed to connect to database.", "error");
+            try {
+                const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
+                
+                if(error) throw error;
 
-            accounts = []; let fail = false;
-            data.forEach(row => {
-                try {
-                    const dec = CryptoJS.AES.decrypt(row.encrypted_secret, masterPin).toString(CryptoJS.enc.Utf8);
-                    if(!dec) throw 'err';
-                    accounts.push({ id: row.id, brand: row.brand, username: row.username, secret: dec });
-                } catch(e) { fail = true; }
-            });
+                accounts = []; let fail = false;
+                data.forEach(row => {
+                    try {
+                        const dec = CryptoJS.AES.decrypt(row.encrypted_secret, masterPin).toString(CryptoJS.enc.Utf8);
+                        if(!dec) throw 'err';
+                        accounts.push({ id: row.id, brand: row.brand, username: row.username, secret: dec });
+                    } catch(e) { fail = true; }
+                });
 
-            if(fail && data.length > 0) { 
-                showToast("Incorrect Master PIN!", "error"); 
-                pinInput.classList.add('error-border');
-                masterPin = null; 
-            } else { 
-                showToast("Vault Unlocked!");
-                document.getElementById('pinScreen').style.display = 'none'; 
-                document.getElementById('appScreen').style.display = 'block';
-                document.getElementById('resetBtn').style.display = 'flex';
-                renderAccounts(); 
+                if(fail && data.length > 0) { 
+                    showToast("Incorrect Master PIN!", "error"); 
+                    pinInput.classList.add('error-border');
+                    masterPin = null; 
+                } else { 
+                    showToast("Vault Unlocked!");
+                    document.getElementById('pinScreen').style.display = 'none'; 
+                    document.getElementById('appScreen').style.display = 'block';
+                    document.getElementById('resetBtn').style.display = 'flex';
+                    renderAccounts(); 
+                }
+            } catch (error) {
+                showToast("Network Error! Try again.", "error");
+            } finally {
+                btn.disabled = false; btnIcon.className = "fa-solid fa-unlock-keyhole"; btnText.innerText = "Unlock Vault";
             }
         }
 
         async function addSecret() {
             if(accounts.length >= 50) return showToast("Maximum 50 slots allowed!", "error");
             
-            const brand = document.getElementById('brandInput').value.trim() || 'Unknown Service';
+            const brandInput = document.getElementById('brandInput');
+            const secretInput = document.getElementById('secretKeyInput');
+            const brand = brandInput.value.trim() || 'Unknown Service';
             const user = document.getElementById('userInput').value.trim();
-            const secret = document.getElementById('secretKeyInput').value.replace(/\s+/g, '').toUpperCase();
+            const secret = secretInput.value.replace(/\s+/g, '').toUpperCase();
             
-            if(!secret) return showToast("Secret Key is required!", "error");
+            brandInput.classList.remove('error-border');
+            secretInput.classList.remove('error-border');
+
+            if(!secret) {
+                secretInput.classList.add('error-border');
+                return showToast("Secret Key is required!", "error");
+            }
+
             try { new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(secret) }); } 
-            catch(e) { return showToast("Invalid Base32 Secret Key format!", "error"); }
+            catch(e) { 
+                secretInput.classList.add('error-border');
+                return showToast("Invalid Base32 Secret Key format!", "error"); 
+            }
+
+            const btn = document.getElementById('addBtn');
+            const btnIcon = document.getElementById('addIcon');
+            const btnText = document.getElementById('addText');
+            btn.disabled = true; btnIcon.className = "fa-solid fa-circle-notch fa-spin"; btnText.innerText = "Saving...";
 
             const enc = CryptoJS.AES.encrypt(secret, masterPin).toString();
             
-            const { data, error } = await supabaseClient.from('user_2fa_secrets')
-                .insert([{user_id: currentUser, brand: brand, username: user, encrypted_secret: enc}])
-                .select();
-            
-            if(!error) {
+            try {
+                const { data, error } = await supabaseClient.from('user_2fa_secrets')
+                    .insert([{user_id: currentUser, brand: brand, username: user, encrypted_secret: enc}])
+                    .select();
+                
+                if(error) throw error;
+
                 accounts.push({id: data[0].id, brand: brand, username: user, secret: secret});
                 document.getElementById('brandInput').value = ''; document.getElementById('userInput').value = ''; document.getElementById('secretKeyInput').value = '';
                 renderAccounts();
                 showToast("Saved securely to cloud!");
-            } else { showToast("Failed to save data.", "error"); }
+            } catch (error) {
+                showToast("Failed to save data.", "error");
+            } finally {
+                btn.disabled = false; btnIcon.className = "fa-solid fa-floppy-disk"; btnText.innerText = "Save Securely";
+            }
         }
 
         function renderAccounts() {
@@ -327,6 +354,12 @@
             container.innerHTML = '';
             document.getElementById('slotCounter').innerText = `Slots available: ${50 - accounts.length}/50`;
             
+            if(accounts.length > 0) {
+                document.getElementById('timerBox').style.display = 'block';
+            } else {
+                document.getElementById('timerBox').style.display = 'none';
+            }
+
             accounts.forEach((acc, i) => {
                 let userHtml = acc.username ? `<div class="acc-user"><i class="fa-regular fa-user"></i> ${acc.username}</div>` : '';
                 container.insertAdjacentHTML('beforeend', `
@@ -347,6 +380,7 @@
         }
 
         function updateTimer() {
+            if(accounts.length === 0) return;
             let epoch = Math.floor(Date.now() / 1000);
             let rem = 30 - (epoch % 30);
             
@@ -359,36 +393,51 @@
                 try {
                     let c = new OTPAuth.TOTP({secret: OTPAuth.Secret.fromBase32(acc.secret)}).generate();
                     let el = document.getElementById(`code-${i}`);
-                    el.innerText = c.slice(0,3) + ' ' + c.slice(3);
-                    el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)';
+                    if(el) {
+                        el.innerText = c.slice(0,3) + ' ' + c.slice(3);
+                        el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)';
+                    }
                 } catch(e){}
             });
         }
 
         async function delAcc(id, index) {
             if(!confirm("Are you sure you want to delete this authenticator?")) return;
-            const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('id', id);
-            if(!error) { accounts.splice(index, 1); renderAccounts(); showToast("Deleted successfully!"); }
-            else { showToast("Failed to delete.", "error"); }
+            try {
+                const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('id', id);
+                if(error) throw error;
+                accounts.splice(index, 1); renderAccounts(); showToast("Deleted successfully!");
+            } catch(e) {
+                showToast("Failed to delete.", "error");
+            }
         }
 
         async function resetAll() {
             if(accounts.length === 0) return showToast("Vault is already empty!", "error");
             if(!confirm("WARNING: This will delete ALL your 2FA codes. This action cannot be undone. Are you sure?")) return;
             
-            const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('user_id', currentUser);
-            if(!error) { accounts = []; renderAccounts(); showToast("All data cleared!"); }
+            try {
+                const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('user_id', currentUser);
+                if(error) throw error;
+                accounts = []; renderAccounts(); showToast("All data cleared!"); 
+            } catch(e) {
+                showToast("Failed to clear data.", "error");
+            }
         }
 
         function copyCode(id) {
-            let txt = document.getElementById(id).innerText.replace(' ','');
+            let el = document.getElementById(id);
+            if(!el) return;
+            let txt = el.innerText.replace(' ','');
             if(txt === "------") return;
             navigator.clipboard.writeText(txt).then(() => showToast("Code Copied to Clipboard!"));
         }
 
         async function logOut() {
-            await supabaseClient.auth.signOut();
-            window.location.href = "login.html";
+            try {
+                await supabaseClient.auth.signOut();
+            } catch(e) {}
+            window.location.replace("login.html");
         }
     </script>
 </body>
