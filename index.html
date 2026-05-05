@@ -21,10 +21,10 @@
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.2.2/otpauth.umd.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
     
     <style>
         /* --- GLOBAL STYLES --- */
@@ -44,7 +44,7 @@
         .hamburger.active span:nth-child(2) { opacity: 0; }
         .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
         
-        /* UPDATED NAV MENU */
+        /* NAV MENU */
         .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; padding-bottom: 20px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
         .mobile-menu.active { right: 0; }
         .mobile-menu a { color: #333; text-decoration: none; padding: 12px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; }
@@ -62,8 +62,6 @@
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border: 1px solid var(--border); }
         .primary-text { color: var(--primary) !important; font-weight: 800; margin-top: 0; margin-bottom: 8px; font-size: 1.5rem;}
         .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;}
-
-        /* Warnings */
         .warning-box { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; padding: 15px; border-radius: 8px; font-size: 0.85rem; text-align: left; margin-bottom: 25px; line-height: 1.5;}
 
         /* --- INPUTS --- */
@@ -83,21 +81,42 @@
 
         .forgot-link { display: block; margin-top: 20px; color: var(--danger); font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: underline; }
 
-        /* --- FLOATING CIRCLE TIMER --- */
-        .timer-container { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; z-index: 1000; display: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1)); }
-        .timer-svg { transform: rotate(-90deg); width: 60px; height: 60px; }
-        .timer-bg { fill: white; stroke: #e2e8f0; stroke-width: 5; }
-        .timer-progress { fill: none; stroke: var(--success); stroke-width: 5; stroke-dasharray: 172.8; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s; stroke-linecap: round; }
-        .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 800; font-size: 1rem; color: var(--text-main); transition: 0.3s; }
-        .timer-container.danger .timer-progress { stroke: var(--danger); }
-        .timer-container.danger .timer-text { color: var(--danger); }
+        /* --- REDESIGNED TIMER BOX --- */
+        .modern-timer {
+            position: fixed; 
+            bottom: 30px; 
+            right: 25px; 
+            background: white; 
+            padding: 12px 20px;
+            border-radius: 50px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            display: none; 
+            align-items: center; 
+            gap: 12px; 
+            z-index: 1000;
+            border: 2px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+        .modern-timer i { font-size: 1.5rem; color: var(--primary); transition: color 0.3s ease; }
+        .timer-bar-bg { width: 80px; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .timer-bar-fill { height: 100%; background: var(--success); width: 100%; transition: width 1s linear, background 0.3s ease; }
+        .timer-text-new { font-weight: 800; font-size: 1.1rem; color: var(--text-main); min-width: 35px; text-align: right; transition: color 0.3s ease; }
+        
+        /* Danger state for timer */
+        .modern-timer.danger { border-color: var(--danger); box-shadow: 0 8px 25px rgba(239, 68, 68, 0.25); }
+        .modern-timer.danger i { color: var(--danger); }
+        .modern-timer.danger .timer-bar-fill { background: var(--danger); }
+        .modern-timer.danger .timer-text-new { color: var(--danger); }
 
         /* --- 2FA ACCOUNT CARDS --- */
         .top-action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;}
-        .global-edit-btn { background: none; border: none; color: #64748b; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .global-edit-btn { background: none; border: none; color: #64748b; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
+        .global-edit-btn:hover { color: var(--primary); }
+        .global-edit-btn.active { color: var(--primary); }
         
-        .acc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
+        .acc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; transition: 0.2s;}
         .acc-card:hover { border-color: var(--primary); }
+        .acc-card.editing-highlight { border: 2px solid var(--warning); transform: scale(1.02); }
         
         .acc-top-block { background: #fcfdfe; padding: 12px 20px; border-bottom: 1px dashed var(--border); text-align: left; }
         .acc-brand { font-size: 1rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
@@ -111,17 +130,9 @@
 
         .acc-edit-bar { background: #f8fafc; padding: 8px 20px; display: none; justify-content: flex-end; gap: 15px; border-top: 1px solid #f1f5f9; }
         .acc-edit-bar.active { display: flex; }
-        .btn-icon { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 1rem; transition: 0.2s; }
+        .btn-icon { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 1.1rem; transition: 0.2s; }
         .btn-icon:hover { color: var(--primary); }
         .btn-icon.del:hover { color: var(--danger); }
-
-        /* --- UPDATED QR MODAL --- */
-        .qr-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0,0,0,0.85); z-index: 3000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px;}
-        .qr-box { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 12px; text-align: center;}
-        #qrReader { width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 15px;}
-        
-        .upload-qr-btn { display: block; width: 100%; padding: 12px; background: #e0e7ff; color: var(--primary); border: 2px dashed var(--primary); border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; transition: 0.3s;}
-        .upload-qr-btn:hover { background: #c7d2fe; }
 
         /* Toast */
         .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; transition: 0.4s; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
@@ -193,8 +204,7 @@
         <div id="appScreen" style="display:none;">
             <div class="card" id="addFormCard">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                    <h3 class="primary-text" style="margin:0; text-align: left;"><i class="fa-solid fa-circle-plus"></i> Add Account</h3>
-                    <button class="btn btn-outline" style="width:auto; padding: 8px 15px; font-size:0.9rem;" onclick="openQrModal()"><i class="fa-solid fa-qrcode"></i> Scan QR</button>
+                    <h3 class="primary-text" id="formTitle" style="margin:0; text-align: left;"><i class="fa-solid fa-circle-plus"></i> Add Account</h3>
                 </div>
                 
                 <div class="input-group"><div class="floating-input"><input type="text" id="brandInput" placeholder=" "><label>Platform Name (e.g. GitHub)</label></div></div>
@@ -203,37 +213,25 @@
                 
                 <div style="display: flex; gap: 10px;">
                     <button class="btn" id="saveBtn" onclick="saveSecret()"><i class="fa-solid fa-floppy-disk"></i> <span id="btnText">Save Securely</span></button>
-                    <button class="btn" id="cancelEditBtn" onclick="resetForm()" style="display:none; background:#94a3b8; width: 60px;"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="btn" id="cancelEditBtn" onclick="resetForm()" style="display:none; background:#94a3b8; width: 60px;" title="Cancel Edit"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
 
             <div class="top-action-bar">
-                <div style="font-weight:700; color:var(--text-main);">My Codes</div>
-                <button class="global-edit-btn" onclick="toggleEditMode()"><i class="fa-solid fa-sliders"></i> <span id="editModeTxt">Organize</span></button>
+                <div style="font-weight:700; color:var(--text-main);"><i class="fa-solid fa-list" style="color:var(--primary); margin-right:5px;"></i> My Codes</div>
+                <button class="global-edit-btn" id="editToggleBtn" onclick="toggleEditMode()"><i class="fa-solid fa-sliders"></i> <span id="editModeTxt">Organize</span></button>
             </div>
 
             <div id="accountsContainer"></div>
         </div>
     </div>
 
-    <div class="qr-modal" id="qrModal">
-        <div class="qr-box">
-            <h3 style="margin-top:0; color:var(--text-main);"><i class="fa-solid fa-qrcode"></i> Read QR Code</h3>
-            
-            <div id="qrReader"></div>
-            
-            <label for="qrImageUpload" class="upload-qr-btn">
-                <i class="fa-solid fa-image"></i> Upload Screenshot
-            </label>
-            <input type="file" id="qrImageUpload" accept="image/*" style="display: none;" onchange="handleQrImageUpload(event)">
-            
-            <button class="btn" style="background:#64748b;" onclick="closeQrModal()">Close</button>
+    <div class="modern-timer" id="floatingTimer">
+        <i class="fa-solid fa-stopwatch"></i>
+        <div class="timer-bar-bg">
+            <div class="timer-bar-fill" id="timerBar"></div>
         </div>
-    </div>
-
-    <div class="timer-container" id="floatingTimer">
-        <svg class="timer-svg" viewBox="0 0 60 60"><circle class="timer-bg" cx="30" cy="30" r="27.5"></circle><circle class="timer-progress" id="timerRing" cx="30" cy="30" r="27.5"></circle></svg>
-        <div class="timer-text" id="timerNum">30</div>
+        <div class="timer-text-new" id="timerNum">30s</div>
     </div>
 
     <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText"></span></div>
@@ -241,10 +239,10 @@
     <script>
         let supabaseClient;
         let masterPin = null, accounts = [], currentUser = null, timerInterval, isEditMode = false, editingId = null;
-        let html5QrCode = null;
 
         async function initApp() {
             try {
+                // Initialize Supabase (Using your keys)
                 const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
                 const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c';
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -319,15 +317,12 @@
             finally { btn.disabled = false; }
         }
 
-        // --- 1. RESET VAULT FIX (100% working alert and data wipe) ---
+        // --- RESET VAULT ---
         async function confirmVaultReset() {
-            // Trim spaces and convert to uppercase to prevent accidental mismatches
             let check = prompt("🚨 DANGER ZONE 🚨\n\nType 'DELETE' in all caps below to permanently wipe your vault:");
             
-            if (check === null) {
-                // User pressed Cancel
-                return; 
-            }
+            if (check === null) return; 
+            
             if (check.trim().toUpperCase() !== "DELETE") {
                 showToast("Reset Cancelled: Incorrect spelling.", "warning");
                 return;
@@ -338,10 +333,8 @@
             document.getElementById('loadingTxt').innerText = "Wiping Data completely...";
 
             try {
-                // Delete data
                 const { error: delErr } = await supabaseClient.from('user_2fa_secrets').delete().eq('user_id', currentUser);
                 if(delErr) throw delErr;
-                // Update metadata
                 const { error: upErr } = await supabaseClient.auth.updateUser({ data: { pin_setup: false } });
                 if(upErr) throw upErr;
                 
@@ -353,68 +346,7 @@
             }
         }
 
-        // --- 2. QR SCANNER FIX (Camera + Image Upload) ---
-        function openQrModal() {
-            document.getElementById('qrModal').style.display = 'flex';
-            html5QrCode = new Html5Qrcode("qrReader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, (err)=>{})
-            .catch((err) => { console.log("Camera access denied or unavailable."); });
-        }
-
-        function closeQrModal() {
-            document.getElementById('qrModal').style.display = 'none';
-            document.getElementById('qrImageUpload').value = '';
-            if(html5QrCode) {
-                html5QrCode.stop().then(() => html5QrCode.clear()).catch(e => console.log(e));
-                html5QrCode = null;
-            }
-        }
-
-        function handleQrImageUpload(e) {
-            if (e.target.files.length == 0) return;
-            const imageFile = e.target.files[0];
-            showToast("Scanning image...", "success");
-
-            // Stop camera if running, then scan file
-            if(html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => { scanFileLogic(imageFile); }).catch(err => { scanFileLogic(imageFile); });
-            } else {
-                scanFileLogic(imageFile);
-            }
-        }
-
-        function scanFileLogic(imageFile) {
-            if(!html5QrCode) html5QrCode = new Html5Qrcode("qrReader");
-            html5QrCode.scanFile(imageFile, true)
-                .then(decodedText => { 
-                    onScanSuccess(decodedText); 
-                })
-                .catch(err => { 
-                    showToast("No valid QR found in image.", "error"); 
-                    document.getElementById('qrImageUpload').value = '';
-                });
-        }
-
-        function onScanSuccess(decodedText) {
-            closeQrModal();
-            try {
-                const url = new URL(decodedText);
-                if (url.protocol !== 'otpauth:') throw new Error("Invalid QR");
-                
-                const pathname = decodeURIComponent(url.pathname).replace('//totp/', '');
-                let [issuer, account] = pathname.split(':');
-                if(!account) { account = issuer; issuer = ''; }
-                
-                const secret = url.searchParams.get('secret');
-                document.getElementById('brandInput').value = url.searchParams.get('issuer') || issuer || 'Scanned App';
-                document.getElementById('userInput').value = account ? account.trim() : '';
-                document.getElementById('secretKeyInput').value = secret;
-                
-                showToast("QR Scanned Successfully!");
-            } catch(e) { showToast("Invalid 2FA QR Code format.", "error"); }
-        }
-
-        // --- 3. EDIT FIX (Passing ID properly) ---
+        // --- SAVE / UPDATE SECRET ---
         async function saveSecret() {
             const brandInput = document.getElementById('brandInput');
             const secretInput = document.getElementById('secretKeyInput');
@@ -432,23 +364,30 @@
             
             try {
                 if(editingId) {
-                    // Update database
+                    // Update existing record
                     const { error } = await supabaseClient.from('user_2fa_secrets').update({ brand: brand, username: user, encrypted_secret: enc }).eq('id', editingId);
                     if(error) throw error;
-                    showToast("Updated Successfully!");
+                    showToast("Code Updated Successfully!");
                 } else {
+                    // Insert new record
                     const { error } = await supabaseClient.from('user_2fa_secrets').insert([{ user_id: currentUser, brand: brand, username: user, encrypted_secret: enc }]);
                     if(error) throw error;
-                    showToast("Saved!");
+                    showToast("Code Saved!");
                 }
-                resetForm(); fetchAndSync();
+                resetForm(); 
+                fetchAndSync();
             } catch(err) { showToast(err.message || "Error saving data", "error"); } 
             finally { btn.disabled = false; }
         }
 
         async function fetchAndSync() {
             const { data } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
-            accounts = data.map(row => ({ id: row.id, brand: row.brand, username: row.username, secret: CryptoJS.AES.decrypt(row.encrypted_secret, masterPin).toString(CryptoJS.enc.Utf8) }));
+            accounts = data.map(row => ({ 
+                id: row.id, 
+                brand: row.brand, 
+                username: row.username, 
+                secret: CryptoJS.AES.decrypt(row.encrypted_secret, masterPin).toString(CryptoJS.enc.Utf8) 
+            }));
             renderAccounts();
         }
 
@@ -457,12 +396,17 @@
             document.getElementById('floatingTimer').style.display = accounts.length > 0 ? 'flex' : 'none';
 
             accounts.forEach((acc, i) => {
+                const isCurrentlyEditing = (acc.id === editingId);
+                
                 container.insertAdjacentHTML('beforeend', `
-                    <div class="acc-card">
+                    <div class="acc-card ${isCurrentlyEditing ? 'editing-highlight' : ''}" id="card-${acc.id}">
                         <div class="acc-top-block"><span class="acc-brand">${acc.brand}</span><span class="acc-user">${acc.username || 'No username'}</span></div>
                         <div class="acc-bottom-block no-select">
                             <div class="code-main-text" id="code-${i}" onclick="copyCode('code-${i}', false)">--- ---</div>
-                            <div class="next-code-box" onclick="copyCode('next-code-${i}', true)"><span class="next-label">Next Code</span><span class="next-text" id="next-code-${i}">--- ---</span></div>
+                            <div class="next-code-box" onclick="copyCode('next-code-${i}', true)">
+                                <span class="next-label">Next Code</span>
+                                <span class="next-text" id="next-code-${i}">--- ---</span>
+                            </div>
                         </div>
                         <div class="acc-edit-bar ${isEditMode ? 'active' : ''}">
                             <button class="btn-icon" onclick="triggerEdit('${acc.id}')" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -473,52 +417,103 @@
             startTimer();
         }
 
+        // --- REDESIGNED TIMER LOGIC ---
         function startTimer() {
             if(timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 let epoch = Math.floor(Date.now() / 1000);
                 let rem = 30 - (epoch % 30);
-                const ring = document.getElementById('timerRing'), timerCont = document.getElementById('floatingTimer');
-                ring.style.strokeDashoffset = 172.8 - ((rem / 30) * 172.8);
-                document.getElementById('timerNum').innerText = rem;
-                if(rem <= 5) timerCont.classList.add('danger'); else timerCont.classList.remove('danger');
+                
+                const barFill = document.getElementById('timerBar');
+                const timerCont = document.getElementById('floatingTimer');
+                const timerNum = document.getElementById('timerNum');
+                
+                // Calculate percentage for the width of the bar
+                let percent = (rem / 30) * 100;
+                barFill.style.width = percent + "%";
+                timerNum.innerText = rem + "s";
+                
+                if(rem <= 5) {
+                    timerCont.classList.add('danger');
+                } else {
+                    timerCont.classList.remove('danger');
+                }
 
                 accounts.forEach((acc, i) => {
                     try {
                         let totp = new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(acc.secret) });
-                        let el = document.getElementById(`code-${i}`), nEl = document.getElementById(`next-code-${i}`);
-                        if(el) { el.innerText = totp.generate().replace(/(...)(...)/, '$1 $2'); el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)'; }
+                        let el = document.getElementById(`code-${i}`);
+                        let nEl = document.getElementById(`next-code-${i}`);
+                        
+                        if(el) { 
+                            el.innerText = totp.generate().replace(/(...)(...)/, '$1 $2'); 
+                            el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)'; 
+                        }
                         if(nEl) nEl.innerText = totp.generate({ timestamp: (epoch + 30) }).replace(/(...)(...)/, '$1 $2');
                     } catch(e){}
                 });
             }, 1000);
         }
 
-        function toggleEditMode() { isEditMode = !isEditMode; document.getElementById('editModeTxt').innerText = isEditMode ? "Done" : "Organize"; renderAccounts(); }
+        function toggleEditMode() { 
+            isEditMode = !isEditMode; 
+            const btn = document.getElementById('editToggleBtn');
+            const txt = document.getElementById('editModeTxt');
+            
+            if(isEditMode) {
+                txt.innerText = "Done";
+                btn.classList.add('active');
+            } else {
+                txt.innerText = "Organize";
+                btn.classList.remove('active');
+            }
+            renderAccounts(); 
+        }
 
-        // --- FIND ACCOUNT BY ID AND EDIT ---
+        // --- EDIT ACCOUNT ---
         function triggerEdit(id) {
             const accToEdit = accounts.find(a => a.id === id);
             if(!accToEdit) return;
             
             editingId = accToEdit.id;
+            
+            // Update UI to show edit mode
+            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen" style="color:var(--warning)"></i> Edit Account';
             document.getElementById('brandInput').value = accToEdit.brand;
             document.getElementById('userInput').value = accToEdit.username;
             document.getElementById('secretKeyInput').value = accToEdit.secret;
-            document.getElementById('btnText').innerText = "Update";
+            document.getElementById('btnText').innerText = "Update Data";
             document.getElementById('cancelEditBtn').style.display = "block";
+            
+            // Re-render accounts to highlight the card being edited
+            renderAccounts();
+            
+            // Scroll to the form
             document.getElementById('addFormCard').scrollIntoView({ behavior: 'smooth' });
         }
 
         function resetForm() {
             editingId = null;
-            document.getElementById('brandInput').value = ''; document.getElementById('userInput').value = ''; document.getElementById('secretKeyInput').value = '';
-            document.getElementById('btnText').innerText = "Save Securely"; document.getElementById('cancelEditBtn').style.display = "none";
+            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-circle-plus"></i> Add Account';
+            document.getElementById('brandInput').value = ''; 
+            document.getElementById('userInput').value = ''; 
+            document.getElementById('secretKeyInput').value = '';
+            document.getElementById('btnText').innerText = "Save Securely"; 
+            document.getElementById('cancelEditBtn').style.display = "none";
+            
+            // Remove highlighting
+            renderAccounts();
         }
 
         async function deleteAcc(id) {
             if(confirm("Delete this code permanently?")) {
-                await supabaseClient.from('user_2fa_secrets').delete().eq('id', id); fetchAndSync(); showToast("Deleted!", "success");
+                await supabaseClient.from('user_2fa_secrets').delete().eq('id', id); 
+                
+                // If user deletes the item they are currently editing, reset the form
+                if(editingId === id) resetForm();
+                
+                fetchAndSync(); 
+                showToast("Code Deleted!", "success");
             }
         }
 
