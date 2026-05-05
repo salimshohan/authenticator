@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2FA Vault | The Ironic Bro</title>
+    <title>Dashboard | IB 2FA Vault</title>
     
     <script>
         window.onerror = function(msg, url, line) {
@@ -34,9 +34,9 @@
         .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 
         /* --- HEADER STYLES --- */
-        header { width: 100%; background: linear-gradient(90deg, #564ad3, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        header { width: 100%; background: linear-gradient(90deg, #4f46e5, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; color: white; text-transform: uppercase; text-decoration: none; }
-        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; }
+        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; font-weight: 900;}
         .hamburger { cursor: pointer; width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; z-index: 2001; background: rgba(255, 255, 255, 0.15); border-radius: 8px; transition: 0.3s; }
         .hamburger:hover { background: rgba(255, 255, 255, 0.25); }
         .hamburger span { display: block; height: 3px; width: 24px; background: white; border-radius: 2px; transition: 0.3s; }
@@ -58,7 +58,7 @@
         /* --- CARDS & UI --- */
         .container { width: 100%; max-width: 500px; padding: 20px; flex: 1; margin-bottom: 40px;}
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border: 1px solid var(--border); }
-        .primary-text { color: var(--primary) !important; font-weight: 700; }
+        .primary-text { color: var(--primary) !important; font-weight: 700; margin-top: 0; margin-bottom: 5px; font-size: 1.5rem;}
         .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
 
         /* --- INPUTS --- */
@@ -76,11 +76,10 @@
         .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
         .floating-input input:focus { border-color: var(--primary); }
         .floating-input input.error-border { border-color: var(--danger) !important; }
-        .floating-input input.error-border ~ label { color: var(--danger) !important; }
 
         .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px;}
         .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); }
-        .btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none;}
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
 
         /* --- FLOATING CIRCLE TIMER --- */
         .timer-container {
@@ -90,10 +89,8 @@
         .timer-svg { transform: rotate(-90deg); width: 60px; height: 60px; }
         .timer-bg { fill: white; stroke: #e2e8f0; stroke-width: 5; }
         .timer-progress {
-            fill: none; stroke: var(--success); stroke-width: 5;
-            stroke-dasharray: 172.8; 
-            stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s;
-            stroke-linecap: round;
+            fill: none; stroke: var(--success); stroke-width: 5; stroke-dasharray: 172.8; 
+            stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s; stroke-linecap: round;
         }
         .timer-text {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -103,14 +100,13 @@
         .timer-container.danger .timer-text { color: var(--danger); }
 
         /* --- 2FA ACCOUNT CARDS --- */
-        .global-edit-btn { background: none; border: none; color: var(--text-muted); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-left: auto; margin-bottom: 15px; }
-
+        .global-edit-btn { background: none; border: none; color: #64748b; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-left: auto; margin-bottom: 15px; }
         .acc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden; }
         .acc-card:hover { border-color: var(--primary); }
         
         .acc-top-block { background: #fcfdfe; padding: 12px 20px; border-bottom: 1px dashed var(--border); text-align: left; }
         .acc-brand { font-size: 1rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-        .acc-user { font-size: 0.75rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; margin-top: 2px; }
+        .acc-user { font-size: 0.75rem; color: #64748b; display: block; margin-top: 2px; }
 
         .acc-bottom-block { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .code-main-text { font-size: 2.1rem; font-weight: 800; color: var(--primary); letter-spacing: 2px; font-family: monospace; cursor: pointer; transition: 0.2s; line-height: 1; }
@@ -135,7 +131,7 @@
 
     <header>
         <a href="index.html" class="brand-logo">
-            <img class="logo-icon" src="https://i.postimg.cc/44VPwf7L/tib-logo.jpg"> The Ironic Bro
+            <div class="logo-icon">IB</div> 2FA Vault
         </a>
         <div class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></div>
     </header>
@@ -144,7 +140,7 @@
         <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; font-weight: bold;">VAULT MENU</div>
         <a href="index.html" class="active"><i class="fa-solid fa-house"></i> Dashboard</a>
         <a href="profile.html"><i class="fa-solid fa-circle-user"></i> My Profile</a>
-        <a href="change-password.html"><i class="fa-solid fa-key"></i> Change Password</a>
+        <a href="import-export.html"><i class="fa-solid fa-file-export"></i> Import / Export</a>
         <a href="settings.html"><i class="fa-solid fa-gear"></i> App Settings</a>
         <a onclick="logOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
     </div>
@@ -153,7 +149,6 @@
         <div id="loadingScreen">
             <div class="spinner"></div>
             <div style="color:var(--primary); font-weight:bold; font-size:1.2rem;">Initializing Vault...</div>
-            <div style="color:#64748b; font-size:0.9rem; margin-top:5px;">Verifying your secure session</div>
         </div>
 
         <div class="card" id="pinScreen" style="display:none;">
@@ -172,11 +167,10 @@
         <div id="appScreen" style="display:none;">
             <div class="card" id="addFormCard">
                 <h3 class="primary-text" style="margin-top:0; text-align: left; margin-bottom: 20px;"><i class="fa-solid fa-circle-plus"></i> Add Authenticator</h3>
-                <div class="input-group"><div class="floating-input"><input type="text" id="brandInput" placeholder=" "><label>Brand Name</label></div></div>
-                <div class="input-group"><div class="floating-input"><input type="text" id="userInput" placeholder=" "><label>Username</label></div></div>
+                <div class="input-group"><div class="floating-input"><input type="text" id="brandInput" placeholder=" "><label>Platform Name (e.g. GitHub)</label></div></div>
+                <div class="input-group"><div class="floating-input"><input type="text" id="userInput" placeholder=" "><label>Username / Email</label></div></div>
                 <div class="input-group"><div class="floating-input"><input type="text" id="secretKeyInput" placeholder=" " autocomplete="off" class="no-select"><label>Secret Key (Base32)</label></div></div>
                 <button class="btn" id="saveBtn" onclick="saveSecret()"><i class="fa-solid fa-floppy-disk"></i> <span id="btnText">Save Securely</span></button>
-                <div style="font-size:0.75rem; margin-top:12px; color:#94a3b8;" id="slotCounter">Slots used: 0/200</div>
             </div>
 
             <button class="global-edit-btn" onclick="toggleEditMode()">
@@ -198,21 +192,22 @@
     <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText"></span></div>
 
     <script>
-        // VARIABLE NAME CHANGED TO AVOID CLASH
+        // VARIABLE NAME 100% FIXED
         let supabaseClient;
         let masterPin = null, accounts = [], currentUser = null, timerInterval, isEditMode = false, editingId = null;
 
         // --- Core Init Logic ---
         async function initApp() {
+            // INCREASED TIMEOUT TO 12 SECONDS FOR SLOW CONNECTIONS
             const fallbackTimeout = setTimeout(() => {
                 const ls = document.getElementById('loadingScreen');
                 if(ls && ls.style.display !== 'none') {
                     ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
-                        Connection Timeout! Supabase blocked.<br><br>
-                        <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Force Login</button>
+                        Connection Timeout! Adblocker ba slow net er karone block hoyeche.<br><br>
+                        <button onclick="window.location.reload()" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Reload Page</button>
                     </div>`;
                 }
-            }, 5000);
+            }, 12000);
 
             try {
                 const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
@@ -220,12 +215,10 @@
                 
                 if (typeof window.supabase === 'undefined') throw new Error("Supabase Library failed to load.");
                 
-                // INSTANTIATE WITH NEW VARIABLE NAME
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 const { data, error } = await supabaseClient.auth.getSession();
                 
                 if (error) throw error;
-                
                 clearTimeout(fallbackTimeout);
 
                 if (!data || !data.session) {
@@ -239,12 +232,11 @@
 
             } catch (err) {
                 clearTimeout(fallbackTimeout);
-                console.error("Init Error:", err);
                 const ls = document.getElementById('loadingScreen');
                 if(ls) {
                     ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
-                        Network/Init Error!<br><span style="font-size:0.8rem; color:#64748b;">${err.message}</span><br><br>
-                        <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Go to Login</button>
+                        Network Error! (Turn off Adblocker)<br><br>
+                        <button onclick="window.location.href='login.html'" class="btn">Go to Login</button>
                     </div>`;
                 }
             }
@@ -295,8 +287,6 @@
         }
 
         async function saveSecret() {
-            if(accounts.length >= 200 && !editingId) return showToast("Limit reached (200)!", "error");
-            
             const brandInput = document.getElementById('brandInput');
             const secretInput = document.getElementById('secretKeyInput');
             const brand = brandInput.value.trim() || 'Service';
@@ -326,7 +316,7 @@
                     if(error) throw error;
                     showToast("Updated!"); resetForm();
                 } else {
-                    const { data, error } = await supabaseClient.from('user_2fa_secrets').insert([{ user_id: currentUser, brand, username: user, encrypted_secret: enc }]).select();
+                    const { error } = await supabaseClient.from('user_2fa_secrets').insert([{ user_id: currentUser, brand, username: user, encrypted_secret: enc }]);
                     if(error) throw error;
                     showToast("Saved!"); resetForm();
                 }
@@ -350,7 +340,6 @@
         function renderAccounts() {
             const container = document.getElementById('accountsContainer');
             container.innerHTML = '';
-            document.getElementById('slotCounter').innerText = `Slots used: ${accounts.length}/200`;
             document.getElementById('floatingTimer').style.display = accounts.length > 0 ? 'flex' : 'none';
 
             accounts.forEach((acc, i) => {
@@ -382,7 +371,6 @@
                 let epoch = Math.floor(Date.now() / 1000);
                 let rem = 30 - (epoch % 30);
                 
-                // Update SVG Ring
                 const ring = document.getElementById('timerRing');
                 const timerCont = document.getElementById('floatingTimer');
                 const offset = (rem / 30) * 172.8;
@@ -454,6 +442,7 @@
             const t = document.getElementById('toastMsg');
             document.getElementById('toastText').innerText = m;
             t.className = `toast show ${type}`;
+            if(type === "error") document.getElementById('toastIcon').className = "fa-solid fa-circle-exclamation";
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
