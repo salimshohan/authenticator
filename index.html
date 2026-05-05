@@ -45,7 +45,10 @@
         .container { width: 100%; max-width: 500px; padding: 20px; flex: 1; margin-bottom: 40px;}
         .card { background: white; padding: 35px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border: 1px solid var(--border); }
         h2 { color: var(--text-main); margin-top: 0; margin-bottom: 5px; }
+        .primary-text { color: var(--primary) !important; font-weight: 700; } /* Blue/purple for h2 primary text */
         p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
+        .card .btn-forget { display: block; text-align: center; color: var(--danger); text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-top: 10px;}
+        .card .btn-forget:hover { text-decoration: underline; }
 
         /* --- MODERN OUTLINE INPUTS --- */
         .input-group { position: relative; text-align: left; margin-bottom: 20px; width: 100%; }
@@ -80,13 +83,19 @@
         
         .acc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); transition: 0.2s;}
         .acc-card:hover { border-color: var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.08);}
-        .acc-info { display: flex; flex-direction: column; }
+        .acc-info { display: flex; flex-direction: column; text-align: left;}
         .acc-brand { font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px;}
         .acc-user { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 5px;}
         
-        .code-area { display: flex; align-items: center; gap: 15px; }
+        .code-area { display: flex; align-items: center; gap: 15px; flex: 1; justify-content: flex-end;}
+        .code-wrapper { display: flex; flex-direction: column; align-items: flex-end;}
         .code-text { font-size: 2.2rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; font-family: monospace; user-select: text; cursor: pointer; transition: 0.2s;}
         .code-text:hover { opacity: 0.8; }
+        
+        .next-code-area { display: flex; align-items: center; gap: 10px; margin-top: -3px;}
+        .next-code-label { font-size: 0.8rem; text-transform: uppercase; color: #cbd5e1; font-weight: bold;}
+        .next-code-text { font-size: 1.2rem; color: #cbd5e1; font-family: monospace; letter-spacing: 1px;}
+
         .btn-del { color: #cbd5e1; background: none; border: none; cursor: pointer; font-size: 1.2rem; transition: 0.2s; padding: 5px;}
         .btn-del:hover { color: var(--danger); transform: scale(1.1);}
         
@@ -116,6 +125,7 @@
     <div class="mobile-menu" id="mobileMenu">
         <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Main Menu</div>
         <a href="index.html" class="active"><i class="fa-solid fa-shield-halved"></i> 2FA Vault</a>
+        <a href="password-generator.html"><i class="fa-solid fa-key"></i> Password Generator</a>
         
         <div style="padding: 20px 25px 10px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold;">Account</div>
         <a href="profile.html"><i class="fa-solid fa-circle-user"></i> Profile</a>
@@ -132,9 +142,12 @@
         </div>
 
         <div class="card" id="pinScreen">
+            <div style="background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 8px; border: 1px solid #fecaca; text-align: left; margin-bottom: 20px; font-size: 0.9rem; font-weight: 600;">
+                <i class="fa-solid fa-triangle-exclamation"></i> <strong>WARNING:</strong> Please remember your Master PIN. If lost, your codes cannot be recovered!
+            </div>
+
             <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 15px;"></i>
-            <h2>Vault Locked</h2>
-            <p class="subtitle">Enter your Master PIN to decrypt your 2FA keys.</p>
+            <h2 class="primary-text">Vault Locked</h2> <p class="subtitle">Enter your Master PIN to decrypt your 2FA keys.</p>
 
             <div class="input-group">
                 <div class="floating-input">
@@ -147,7 +160,7 @@
                 <i class="fa-solid fa-unlock-keyhole" id="unlockIcon"></i> 
                 <span id="unlockText">Unlock Vault</span>
             </button>
-        </div>
+            <a onclick="resetAllWarning()" class="btn-forget">Forgotten your PIN? Clear data & reset.</a> </div>
 
         <div id="appScreen">
             <div class="card" style="padding: 25px 20px;">
@@ -192,7 +205,7 @@
         </div>
     </div>
 
-    <button class="sticky-reset" id="resetBtn" onclick="resetAll()" title="Delete All Data" style="display: none;">
+    <button class="sticky-reset" id="resetBtn" onclick="resetAllWarning()" title="Delete All Data" style="display: none;">
         <i class="fa-solid fa-trash-can"></i>
     </button>
 
@@ -369,7 +382,11 @@
                             ${userHtml}
                         </div>
                         <div class="code-area">
-                            <div class="code-text" id="code-${i}" onclick="copyCode('code-${i}')">------</div>
+                            <div class="code-wrapper">
+                                <div class="code-text" id="code-${i}" onclick="copyCode('code-${i}')">573 236</div> <div class="next-code-area">
+                                    <div class="next-code-label">Next Code:</div>
+                                    <div class="next-code-text" id="next-code-${i}">871 511</div> </div>
+                            </div>
                             <button class="btn-del" onclick="delAcc('${acc.id}', ${i})" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>`);
@@ -391,12 +408,24 @@
 
             accounts.forEach((acc, i) => {
                 try {
-                    let c = new OTPAuth.TOTP({secret: OTPAuth.Secret.fromBase32(acc.secret)}).generate();
+                    let totp = new OTPAuth.TOTP({secret: OTPAuth.Secret.fromBase32(acc.secret)});
+                    
+                    // Main current code
+                    let c = totp.generate();
                     let el = document.getElementById(`code-${i}`);
+                    
+                    // Next code preview
+                    let nextC = totp.generate({timestamp: epoch + 30}); // get next 30s period code
+                    let nextEl = document.getElementById(`next-code-${i}`);
+
                     if(el) {
                         el.innerText = c.slice(0,3) + ' ' + c.slice(3);
                         el.style.color = rem <= 5 ? 'var(--danger)' : 'var(--primary)';
                     }
+                    if(nextEl) {
+                        nextEl.innerText = nextC.slice(0,3) + ' ' + nextC.slice(3);
+                    }
+
                 } catch(e){}
             });
         }
@@ -412,14 +441,23 @@
             }
         }
 
-        async function resetAll() {
-            if(accounts.length === 0) return showToast("Vault is already empty!", "error");
-            if(!confirm("WARNING: This will delete ALL your 2FA codes. This action cannot be undone. Are you sure?")) return;
+        // --- WARNING & DATA RESET FUNCTION ---
+        async function resetAllWarning() {
+            // New specific strong warning prompt
+            if(!confirm("WARNING: This action is permanent! If you proceed, ALL your 2FA codes will be deleted from the cloud. You will need to setup a new Master PIN and manually re-add ALL your authenticators. We cannot recover your data.\n\nAre you absolutely sure you want to delete all data from this vault?")) return;
+            
+            // Re-confirm for safety
+            if(!confirm("LAST WARNING: Final confirmation. Pura data clear and reset korar jonno ready? Ekhon confirm korle konodin ferot paben na!")) return;
             
             try {
                 const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('user_id', currentUser);
                 if(error) throw error;
-                accounts = []; renderAccounts(); showToast("All data cleared!"); 
+                
+                showToast("All data cleared! Redirecting to setup new vault."); 
+                // Redirect user to signup page or special "setup new PIN" page. 
+                // Since signup already handles metadata, kicking to signup to "re-register" with new data is a clean option.
+                setTimeout(() => window.location.replace("signup.html"), 1500); 
+
             } catch(e) {
                 showToast("Failed to clear data.", "error");
             }
@@ -429,7 +467,7 @@
             let el = document.getElementById(id);
             if(!el) return;
             let txt = el.innerText.replace(' ','');
-            if(txt === "------") return;
+            if(txt === "------" || txt === "") return;
             navigator.clipboard.writeText(txt).then(() => showToast("Code Copied to Clipboard!"));
         }
 
