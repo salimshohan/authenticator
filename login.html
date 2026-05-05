@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | The Ironic Bro</title>
+    <title>Login | IB 2FA Vault</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,13 +11,13 @@
     <style>
         /* --- GLOBAL STYLES --- */
         :root { --bg-body: #f8fafc; --primary: #4f46e5; --primary-hover: #4338ca; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --bg-card: #ffffff; }
-        body { margin: 0; padding-top: 80px; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        body { margin: 0; padding-top: 80px; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden;}
         * { box-sizing: border-box; outline: none; }
 
         /* --- HEADER STYLES --- */
-        header { width: 100%; background: linear-gradient(90deg, #564ad3, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        header { width: 100%; background: linear-gradient(90deg, #4f46e5, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; color: white; text-transform: uppercase; text-decoration: none; }
-        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; }
+        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; font-weight: 900;}
         .hamburger { cursor: pointer; width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; z-index: 2001; background: rgba(255, 255, 255, 0.15); border-radius: 8px; transition: 0.3s; }
         .hamburger:hover { background: rgba(255, 255, 255, 0.25); }
         .hamburger span { display: block; height: 3px; width: 24px; background: white; border-radius: 2px; transition: 0.3s; }
@@ -26,63 +26,85 @@
         .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
         
         /* Mobile Menu */
-        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
         .mobile-menu.active { right: 0; }
         .mobile-menu a { color: #333; text-decoration: none; padding: 15px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
         .mobile-menu a i { width: 25px; text-align: center; color: var(--primary); font-size: 18px; }
         .mobile-menu a:hover, .mobile-menu a.active { background: #eff0f0; color: var(--primary); border-left: 4px solid var(--primary); }
+        .menu-section-title { padding: 15px 25px 5px; font-size: 0.75rem; color: #94a3b8; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+        
+        .fade-in-up { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; }
+        
+        /* --- LAYOUT WRAPPER (Split View on Desktop, Stacked on Mobile) --- */
+        .main-wrapper { display: flex; flex-direction: column; align-items: center; max-width: 900px; width: 100%; padding: 20px; gap: 40px; margin-top: 10px; }
+        
+        @media (min-width: 768px) {
+            .main-wrapper { flex-direction: row; justify-content: space-between; align-items: stretch; margin-top: 40px;}
+            .info-section, .form-section { flex: 1; }
+        }
+
+        /* --- INFO SECTION --- */
+        .info-section { display: flex; flex-direction: column; justify-content: center; max-width: 400px;}
+        .info-title { font-size: 2rem; color: var(--primary); font-weight: 800; margin-top: 0; margin-bottom: 10px; line-height: 1.2;}
+        .info-subtitle { color: #64748b; font-size: 1rem; line-height: 1.5; margin-bottom: 30px; }
+        
+        .feature-item { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; transition: 0.3s; }
+        .feature-item:hover { transform: translateX(5px); border-color: var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.08);}
+        .feature-icon { font-size: 1.8rem; color: var(--primary); background: #e0e7ff; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; border-radius: 12px; flex-shrink: 0; animation: float 3s ease-in-out infinite; }
+        .feature-text h4 { margin: 0 0 5px 0; color: var(--text-main); font-size: 1.05rem; }
+        .feature-text p { margin: 0; color: #64748b; font-size: 0.85rem; line-height: 1.4; }
 
         /* --- LOGIN FORM STYLES --- */
-        .container { width: 100%; max-width: 450px; padding: 20px; flex: 1; margin-bottom: 40px;}
-        .card { background: white; padding: 35px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
-        h2 { color: var(--text-main); margin-top: 0; margin-bottom: 5px; }
-        p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
+        .form-section { width: 100%; max-width: 450px; }
+        .card { background: white; padding: 35px 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border: 1px solid var(--border); }
+        .card h2 { color: var(--text-main); margin-top: 0; margin-bottom: 5px; font-size: 1.8rem;}
+        .card p.subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 30px; }
 
-        /* --- MODERN OUTLINE INPUTS --- */
+        /* Inputs */
         .input-group { position: relative; text-align: left; margin-bottom: 25px; width: 100%; }
-        
         .floating-input { position: relative; width: 100%; }
         .floating-input input {
             width: 100%; padding: 16px 15px; border: 2px solid var(--border);
-            border-radius: 8px; font-size: 1rem; background: transparent;
-            color: var(--text-main); transition: all 0.3s ease; font-family: inherit;
+            border-radius: 10px; font-size: 1rem; background: transparent;
+            color: var(--text-main); transition: all 0.3s ease; font-family: inherit; font-weight: 500;
         }
-        
         .floating-input label {
             position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
             background: var(--bg-card); padding: 0 6px; color: #64748b; font-size: 1rem;
-            pointer-events: none; transition: 0.2s ease all; display: flex; align-items: center; gap: 6px;
+            pointer-events: none; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 6px;
         }
-
-        /* Focus & Active State */
         .floating-input input:focus, .floating-input input:not(:placeholder-shown) { border-color: var(--primary); }
         .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label {
-            top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600;
+            top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 700;
         }
-
-        /* Error State */
         .floating-input input.error-border { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
         .floating-input input.error-border ~ label { color: var(--danger) !important; }
         .error-text { color: var(--danger); font-size: 0.8rem; font-weight: 600; margin-top: 6px; display: none; padding-left: 5px;}
         
-        /* Password Specific */
         .floating-input input[type="password"], .floating-input input[type="text"].pass-view { padding-right: 45px; }
         .eye-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; font-size: 1.1rem; transition: 0.2s; z-index: 10;}
         .eye-icon:hover { color: var(--primary); }
 
         /* Buttons & Links */
-        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 10px;}
-        .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 10px;}
+        .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3); }
+        .btn:active:not(:disabled) { transform: translateY(-1px); }
         .btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none;}
         
-        .link { display: block; margin-top: 20px; color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.2s;}
-        .link:hover { text-decoration: underline; }
+        .link { display: block; margin-top: 25px; color: #64748b; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.2s;}
+        .link span { color: var(--primary); }
+        .link:hover span { text-decoration: underline; }
         
-        .forgot-pass { display: block; text-align: right; color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-top: -15px; margin-bottom: 20px;}
-        .forgot-pass:hover { text-decoration: underline; }
+        .forgot-pass { display: block; text-align: right; color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-top: -15px; margin-bottom: 25px; transition: 0.2s;}
+        .forgot-pass:hover { text-decoration: underline; color: var(--primary-hover); }
         
         /* Success Message Box */
-        .success-box { display: none; background: #f0fdf4; color: #065f46; padding: 15px; border-radius: 8px; border: 1px solid #34d399; text-align: center; margin-bottom: 25px; font-weight: 600; font-size: 0.95rem;}
+        .success-box { display: none; background: #f0fdf4; color: #065f46; padding: 15px; border-radius: 10px; border: 1px solid #34d399; text-align: left; margin-bottom: 25px; font-weight: 600; font-size: 0.9rem;}
         .success-box i { font-size: 1.2rem; color: var(--success); margin-right: 5px; }
     </style>
 </head>
@@ -90,7 +112,7 @@
 
     <header>
         <a href="index.html" class="brand-logo">
-            <img class="logo-icon" src="https://i.postimg.cc/44VPwf7L/tib-logo.jpg"> The Ironic Bro
+            <div class="logo-icon">IB</div> 2FA Vault
         </a>
         <div class="hamburger" id="hamburgerBtn">
             <span></span><span></span><span></span>
@@ -98,47 +120,88 @@
     </header>
 
     <div class="mobile-menu" id="mobileMenu">
-        <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
+        <div class="menu-section-title">Account</div>
         <a href="login.html" class="active"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
-        <a href="signup.html"><i class="fa-solid fa-user-plus"></i> Sign Up</a>
-        <a href="contact.html"><i class="fa-solid fa-envelope"></i> Contact Us</a>
+        <a href="signup.html"><i class="fa-solid fa-user-plus"></i> Create Account</a>
+        <a href="forget-password.html"><i class="fa-solid fa-key"></i> Forgot Password</a>
+        
+        <div class="menu-section-title">Support & Info</div>
+        <a href="faq.html"><i class="fa-solid fa-clipboard-question"></i> Help & FAQ</a>
+        <a href="about.html"><i class="fa-solid fa-circle-info"></i> About App</a>
+        <a href="contact.html"><i class="fa-solid fa-headset"></i> Support / Contact</a>
+        <a href="privacy-policy.html"><i class="fa-solid fa-file-shield"></i> Privacy Policy</a>
+        <a href="terms.html"><i class="fa-solid fa-scale-balanced"></i> Terms of Service</a>
     </div>
 
-    <div class="container">
-        <div class="card">
+    <div class="main-wrapper">
+        
+        <div class="info-section">
+            <h1 class="info-title fade-in-up">Secure Your Digital Life.</h1>
+            <p class="info-subtitle fade-in-up delay-1">Access your two-factor authentication codes anytime, anywhere, with military-grade encryption.</p>
             
-            <div class="success-box" id="verifiedBox">
-                <i class="fa-solid fa-circle-check"></i> Your email has been verified! You can now login.
-            </div>
-
-            <h2>Welcome Back</h2>
-            <p class="subtitle">Enter your credentials to access your vault.</p>
-
-            <div class="input-group">
-                <div class="floating-input">
-                    <input type="email" id="email" placeholder=" ">
-                    <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+            <div class="feature-item fade-in-up delay-1">
+                <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="feature-text">
+                    <h4>Bank-Grade Security</h4>
+                    <p>Your vault is secured with AES-256 and Zero-Knowledge encryption.</p>
                 </div>
-                <div class="error-text" id="emailError"></div>
             </div>
-
-            <div class="input-group">
-                <div class="floating-input">
-                    <input type="password" id="password" placeholder=" ">
-                    <label><i class="fa-solid fa-lock"></i> Password</label>
-                    <i class="fa-solid fa-eye-slash eye-icon" id="togglePassword" onclick="togglePass()"></i>
+            
+            <div class="feature-item fade-in-up delay-2">
+                <div class="feature-icon" style="animation-delay: 0.5s;"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <div class="feature-text">
+                    <h4>Seamless Cloud Sync</h4>
+                    <p>Never lose your codes again. Your data is securely backed up in the cloud.</p>
                 </div>
-                <div class="error-text" id="passwordError"></div>
             </div>
 
-            <a href="forget-password.html" class="forgot-pass">Forgot Password?</a>
-
-            <button class="btn" id="logBtn" onclick="processLogin()">
-                <i class="fa-solid fa-right-to-bracket" id="btnIcon"></i> 
-                <span id="btnText">Login</span>
-            </button>
-            <a href="signup.html" class="link">Don't have an account? Sign Up here</a>
+            <div class="feature-item fade-in-up delay-3">
+                <div class="feature-icon" style="animation-delay: 1s;"><i class="fa-solid fa-laptop-mobile"></i></div>
+                <div class="feature-text">
+                    <h4>Device Independent</h4>
+                    <p>Access your 2FA keys from your phone, laptop, or tablet effortlessly.</p>
+                </div>
+            </div>
         </div>
+
+        <div class="form-section fade-in-up delay-2">
+            <div class="card">
+                
+                <div class="success-box" id="verifiedBox">
+                    <i class="fa-solid fa-circle-check"></i> Your email has been verified! You can now login.
+                </div>
+
+                <h2>Welcome Back!</h2>
+                <p class="subtitle">Enter your credentials to access your vault.</p>
+
+                <div class="input-group">
+                    <div class="floating-input">
+                        <input type="email" id="email" placeholder=" ">
+                        <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    </div>
+                    <div class="error-text" id="emailError"></div>
+                </div>
+
+                <div class="input-group">
+                    <div class="floating-input">
+                        <input type="password" id="password" placeholder=" ">
+                        <label><i class="fa-solid fa-lock"></i> Master Password</label>
+                        <i class="fa-solid fa-eye-slash eye-icon" id="togglePassword" onclick="togglePass()"></i>
+                    </div>
+                    <div class="error-text" id="passwordError"></div>
+                </div>
+
+                <a href="forget-password.html" class="forgot-pass">Forgot Password?</a>
+
+                <button class="btn" id="logBtn" onclick="processLogin()">
+                    <i class="fa-solid fa-right-to-bracket" id="btnIcon"></i> 
+                    <span id="btnText">Login to Vault</span>
+                </button>
+                
+                <a href="signup.html" class="link">New to IB Vault? <span>Sign Up here</span></a>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -194,15 +257,14 @@
 
         // --- Init Function ---
         document.addEventListener('DOMContentLoaded', async () => {
-            // 1. Check URL for email verification param
+            // Check URL for email verification param
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('email_verified') === 'true') {
                 document.getElementById('verifiedBox').style.display = 'block';
-                // URL theke param ta hide kore dite pari jate clean lage (optional)
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
-            // 2. Redirect if already logged in
+            // Redirect if already logged in
             const { data } = await supabaseClient.auth.getSession();
             if (data.session) window.location.href = "index.html";
         });
@@ -228,7 +290,7 @@
             
             btn.disabled = true; 
             btnIcon.className = "fa-solid fa-circle-notch fa-spin"; 
-            btnText.innerText = "Logging in...";
+            btnText.innerText = "Authenticating...";
 
             // Send to Supabase
             const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -239,7 +301,7 @@
             // Reset Button Animation
             btn.disabled = false; 
             btnIcon.className = "fa-solid fa-right-to-bracket";
-            btnText.innerText = "Login";
+            btnText.innerText = "Login to Vault";
 
             if(error) {
                 // Handle specific Supabase Auth errors
