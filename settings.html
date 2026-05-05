@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | The Ironic Bro</title>
+    
+    <script>
+        window.onerror = function(msg, url, line) {
+            const ls = document.getElementById('loadingScreen');
+            if(ls) {
+                ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem; margin-bottom:10px;"></i><br>
+                    SYSTEM CRASHED!<br><br>
+                    Error: ${msg}<br>Line: ${line}<br><br>
+                    <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Go to Login Page</button>
+                </div>`;
+            }
+            return false;
+        };
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* --- GLOBAL STYLES --- */
+        :root { --bg-body: #f8fafc; --primary: #4f46e5; --primary-hover: #4338ca; --text-main: #0f172a; --border: #cbd5e1; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --bg-card: #ffffff; }
+        body { margin: 0; padding-top: 80px; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        * { box-sizing: border-box; outline: none; }
+
+        .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+
+        /* --- HEADER STYLES --- */
+        header { width: 100%; background: linear-gradient(90deg, #564ad3, #322a96); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 700; color: white; text-transform: uppercase; text-decoration: none; }
+        .logo-icon { width: 42px; height: 42px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #322a96; flex-shrink: 0; }
+        .hamburger { cursor: pointer; width: 45px; height: 45px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; z-index: 2001; background: rgba(255, 255, 255, 0.15); border-radius: 8px; transition: 0.3s; }
+        .hamburger:hover { background: rgba(255, 255, 255, 0.25); }
+        .hamburger span { display: block; height: 3px; width: 24px; background: white; border-radius: 2px; transition: 0.3s; }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
+        
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: white; display: flex; flex-direction: column; padding-top: 80px; transition: 0.4s; z-index: 1999; box-shadow: -5px 0 25px rgba(0,0,0,0.1); overflow-y: auto; }
+        .mobile-menu.active { right: 0; }
+        .mobile-menu a { color: #333; text-decoration: none; padding: 15px 25px; font-size: 15px; font-weight: 500; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; }
+        .mobile-menu a i { width: 25px; text-align: center; color: var(--primary); font-size: 18px; }
+        .mobile-menu a:hover, .mobile-menu a.active { background: #eff0f0; color: var(--primary); border-left: 4px solid var(--primary); }
+
+        /* --- LOADING SCREEN --- */
+        #loadingScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 100px; text-align: center;}
+        .spinner { border: 6px solid #e2e8f0; border-top: 6px solid var(--primary); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- CARDS & UI --- */
+        .container { width: 100%; max-width: 500px; padding: 20px; flex: 1; margin-bottom: 40px;}
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 25px;}
+        .primary-text { color: var(--primary) !important; font-weight: 700; margin-top: 0; margin-bottom: 5px; font-size: 1.5rem; text-align: center;}
+        .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; text-align: center;}
+        
+        .section-title { font-size: 0.85rem; text-transform: uppercase; color: #94a3b8; font-weight: 800; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 5px; letter-spacing: 1px;}
+
+        /* --- SETTINGS ITEMS --- */
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .setting-item:last-child { border-bottom: none; }
+        .setting-info { display: flex; align-items: center; gap: 15px; }
+        .setting-icon { width: 40px; height: 40px; background: #e0e7ff; color: var(--primary); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
+        .setting-icon.danger { background: #fee2e2; color: var(--danger); }
+        .setting-text h4 { margin: 0; font-size: 1.05rem; color: var(--text-main); }
+        .setting-text p { margin: 3px 0 0 0; font-size: 0.8rem; color: #64748b; }
+        
+        /* Select Dropdown */
+        .setting-select { padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.95rem; color: var(--text-main); font-weight: 600; outline: none; cursor: pointer; transition: 0.2s;}
+        .setting-select:focus { border-color: var(--primary); }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Buttons */
+        .btn { padding: 10px 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; box-shadow: none; transform: none;}
+        .btn-danger { background: white; border: 2px solid var(--danger); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); transform: translateY(-2px);}
+
+        /* Toast */
+        .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; transition: 0.4s; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .toast.show { bottom: 30px; }
+        .toast.error { background: var(--danger); }
+        .toast.success { background: var(--success); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="brand-logo">
+            <img class="logo-icon" src="https://i.postimg.cc/44VPwf7L/tib-logo.jpg"> The Ironic Bro
+        </a>
+        <div class="hamburger" id="hamburgerBtn"><span></span><span></span><span></span></div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <div style="padding: 0 25px 10px; font-size: 0.8rem; color: #888; font-weight: bold;">VAULT MENU</div>
+        <a href="index.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="profile.html"><i class="fa-solid fa-circle-user"></i> My Profile</a>
+        <a href="change-password.html"><i class="fa-solid fa-key"></i> Change Password</a>
+        <a href="settings.html" class="active"><i class="fa-solid fa-gear"></i> App Settings</a>
+        <a onclick="logOut()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+
+    <div class="container">
+        <div id="loadingScreen">
+            <div class="spinner"></div>
+            <div style="color:var(--primary); font-weight:bold; font-size:1.2rem;">Loading Settings...</div>
+        </div>
+
+        <div id="mainScreen" style="display:none;">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <i class="fa-solid fa-gear" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
+                <h2 class="primary-text">App Settings</h2>
+                <p class="subtitle">Customize your vault experience and manage data.</p>
+            </div>
+
+            <div class="card" style="padding: 20px;">
+                <div class="section-title">Preferences</div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-icon"><i class="fa-solid fa-moon"></i></div>
+                        <div class="setting-text">
+                            <h4>Dark Mode</h4>
+                            <p>Toggle dark interface theme</p>
+                        </div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <div class="setting-text">
+                            <h4>Auto-Lock Vault</h4>
+                            <p>Lock after inactivity</p>
+                        </div>
+                    </div>
+                    <select class="setting-select" id="autoLockSelect" onchange="saveSetting('autoLock', this.value)">
+                        <option value="1">1 Minute</option>
+                        <option value="5">5 Minutes</option>
+                        <option value="15">15 Minutes</option>
+                        <option value="never">Never</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 20px;">
+                <div class="section-title">Data Management</div>
+                
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start;">
+                    <div class="setting-info" style="margin-bottom: 15px;">
+                        <div class="setting-icon"><i class="fa-solid fa-file-export"></i></div>
+                        <div class="setting-text">
+                            <h4>Export Encrypted Backup</h4>
+                            <p>Download a JSON copy of your vault data. It remains encrypted.</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" style="width: 100%;" onclick="exportData()">
+                        <i class="fa-solid fa-download"></i> Download Backup
+                    </button>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 20px; border-color: #fecaca; background: #fff5f5;">
+                <div class="section-title" style="color: var(--danger); border-bottom-color: #fecaca;">Danger Zone</div>
+                
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; border: none;">
+                    <div class="setting-info" style="margin-bottom: 15px;">
+                        <div class="setting-icon danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="setting-text">
+                            <h4 style="color: var(--danger);">Reset Vault</h4>
+                            <p>Permanently delete all 2FA codes and reset your PIN.</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" style="width: 100%;" onclick="resetAllWarning()">
+                        <i class="fa-solid fa-trash-can"></i> Clear All Data
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="toast" id="toastMsg"><i id="toastIcon" class="fa-solid fa-circle-info"></i> <span id="toastText"></span></div>
+
+    <script>
+        let supabaseClient;
+        let currentUser = null;
+
+        // --- Core Init Logic ---
+        async function initApp() {
+            const fallbackTimeout = setTimeout(() => {
+                const ls = document.getElementById('loadingScreen');
+                if(ls && ls.style.display !== 'none') {
+                    ls.innerHTML = `<div style="color:#ef4444; font-weight:bold; padding:20px; text-align:center;">
+                        Connection Timeout!<br><br>
+                        <button onclick="window.location.href='login.html'" style="padding:10px 20px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Force Login</button>
+                    </div>`;
+                }
+            }, 5000);
+
+            try {
+                const SUPABASE_URL = 'https://pykkprrhsxvfhcrhbiue.supabase.co';
+                const SUPABASE_ANON_KEY = 'sb_publishable_7QcQbiHWoIXRXTik5tyCmw_InPPcI-c';
+                
+                if (typeof window.supabase === 'undefined') throw new Error("Supabase failed to load.");
+                
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const { data, error } = await supabaseClient.auth.getSession();
+                
+                if (error) throw error;
+                clearTimeout(fallbackTimeout);
+
+                if (!data || !data.session) return window.location.replace("login.html");
+
+                currentUser = data.session.user.id;
+                
+                // Load Local Settings
+                loadSettings();
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainScreen').style.display = 'block';
+
+            } catch (err) {
+                clearTimeout(fallbackTimeout);
+                window.location.replace("login.html");
+            }
+        }
+
+        initApp();
+
+        // --- Menu Logic ---
+        const hamburgerBtn = document.getElementById("hamburgerBtn");
+        const mobileMenu = document.getElementById("mobileMenu");
+        hamburgerBtn.addEventListener("click", () => { hamburgerBtn.classList.toggle("active"); mobileMenu.classList.toggle("active"); });
+
+        // --- Settings Logic ---
+        function loadSettings() {
+            // Load Auto Lock
+            const lockTime = localStorage.getItem('tib_autolock') || '5';
+            document.getElementById('autoLockSelect').value = lockTime;
+
+            // Load Dark Mode
+            const isDark = localStorage.getItem('tib_darkmode') === 'true';
+            document.getElementById('darkModeToggle').checked = isDark;
+            // if(isDark) document.body.classList.add('dark-mode'); // Optional: Apply CSS if written
+        }
+
+        function saveSetting(key, value) {
+            localStorage.setItem(`tib_${key}`, value);
+            showToast("Settings saved!", "success");
+        }
+
+        function toggleDarkMode() {
+            const toggle = document.getElementById('darkModeToggle').checked;
+            localStorage.setItem('tib_darkmode', toggle);
+            
+            if(toggle) {
+                showToast("Dark Mode enabled! (CSS required in future updates)", "success");
+                // document.body.classList.add('dark-mode');
+            } else {
+                showToast("Light Mode enabled!", "success");
+                // document.body.classList.remove('dark-mode');
+            }
+        }
+
+        // --- Export Data ---
+        async function exportData() {
+            try {
+                showToast("Fetching backup...", "success");
+                const { data, error } = await supabaseClient.from('user_2fa_secrets').select('*').eq('user_id', currentUser);
+                
+                if(error) throw error;
+                if(!data || data.length === 0) return showToast("Your vault is empty! Nothing to export.", "error");
+
+                // Clean up data for export
+                const exportData = data.map(item => ({
+                    brand: item.brand,
+                    username: item.username,
+                    encrypted_secret: item.encrypted_secret, // We export the encrypted string for safety!
+                    created_at: item.created_at
+                }));
+
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `TIB_Vault_Backup_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast("Backup downloaded successfully!", "success");
+
+            } catch (err) {
+                showToast("Failed to export data.", "error");
+            }
+        }
+
+        // --- Danger Zone: Reset All ---
+        async function resetAllWarning() {
+            if(!confirm("⚠️ WARNING: This action is permanent! ALL your 2FA codes will be deleted from the cloud. You will need to setup a new Master PIN and manually re-add ALL your authenticators.\n\nAre you sure you want to delete all data?")) return;
+            if(!confirm("LAST WARNING: Final confirmation. Are you absolutely sure?")) return;
+            
+            try {
+                const { error } = await supabaseClient.from('user_2fa_secrets').delete().eq('user_id', currentUser);
+                if(error) throw error;
+                showToast("All data cleared! Redirecting to setup."); 
+                setTimeout(() => window.location.replace("signup.html"), 1500); 
+            } catch(e) { showToast("Failed to clear data.", "error"); }
+        }
+
+        // --- Helpers ---
+        function showToast(m, type="success") {
+            const t = document.getElementById('toastMsg'), icon = document.getElementById('toastIcon');
+            document.getElementById('toastText').innerText = m;
+            t.className = `toast show ${type}`;
+            if(type === "error") icon.className = "fa-solid fa-circle-exclamation"; else icon.className = "fa-solid fa-circle-check";
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function logOut() { 
+            try { await supabaseClient.auth.signOut(); } catch(e){} 
+            window.location.replace("login.html"); 
+        }
+    </script>
+</body>
+</html>
