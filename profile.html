@@ -64,23 +64,36 @@
 
         /* --- INPUTS --- */
         .input-group { position: relative; text-align: left; margin-bottom: 20px; width: 100%; }
+        .flex-row { display: flex; gap: 10px; } /* For Phone Number Row */
+        
         .floating-input { position: relative; width: 100%; }
-        .floating-input input {
+        .floating-input input, .floating-input select {
             width: 100%; padding: 16px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem;
-            background: transparent; color: var(--text-main); transition: 0.3s; font-weight: 500;
+            background: transparent; color: var(--text-main); transition: 0.3s; font-weight: 500; font-family: inherit;
         }
+        
+        /* Select specific styling */
+        .floating-input select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+        .select-arrow { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #94a3b8; }
+
         .floating-input label {
             position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
             background: var(--bg-card); padding: 0 6px; color: #64748b; font-size: 1rem;
             pointer-events: none; transition: 0.2s ease all; display: flex; align-items: center; gap: 6px;
         }
-        .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label { top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
-        .floating-input input:focus { border-color: var(--primary); }
-        .floating-input input.error-border { border-color: var(--danger) !important; }
+        
+        /* Floating logic */
+        .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label,
+        .floating-input select:focus ~ label, .floating-input select:valid ~ label, .floating-input select.has-val ~ label { 
+            top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; 
+        }
+        
+        .floating-input input:focus, .floating-input select:focus { border-color: var(--primary); }
+        .floating-input input.error-border, .floating-input select.error-border { border-color: var(--danger) !important; }
         
         /* Disabled Input Styles */
-        .floating-input input:disabled { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; }
-        .floating-input input:disabled ~ label { background: transparent; color: #94a3b8; }
+        .floating-input input:disabled, .floating-input select:disabled { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; }
+        .floating-input input:disabled ~ label, .floating-input select:disabled ~ label { background: transparent; color: #94a3b8; }
         
         .lock-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #cbd5e1; font-size: 1.1rem; z-index: 10;}
 
@@ -139,16 +152,69 @@
 
             <div class="input-group">
                 <div class="floating-input">
-                    <input type="date" id="dobInput" placeholder=" " disabled>
-                    <label><i class="fa-solid fa-calendar-days"></i> Birth Date</label>
+                    <input type="email" id="emailInput" placeholder=" " disabled title="Email address cannot be changed here.">
+                    <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <i class="fa-solid fa-lock lock-icon" title="Locked for security"></i>
+                </div>
+            </div>
+
+            <div class="input-group flex-row">
+                <div class="floating-input" style="flex: 0 0 110px;">
+                    <select id="dialCodeInput" disabled class="has-val">
+                        <option value="+880">🇧🇩 +880</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+92">🇵🇰 +92</option>
+                    </select>
+                    <label>Code</label>
+                    <i class="fa-solid fa-chevron-down select-arrow" style="font-size:0.8rem;"></i>
+                </div>
+                <div class="floating-input" style="flex: 1;">
+                    <input type="tel" id="phoneInput" placeholder=" " disabled>
+                    <label><i class="fa-solid fa-phone"></i> Phone Number</label>
                 </div>
             </div>
 
             <div class="input-group">
                 <div class="floating-input">
-                    <input type="email" id="emailInput" placeholder=" " disabled title="Email address cannot be changed here.">
-                    <label><i class="fa-solid fa-envelope"></i> Email Address</label>
-                    <i class="fa-solid fa-lock lock-icon" title="Locked for security"></i>
+                    <input type="date" id="dobInput" placeholder=" " disabled>
+                    <label><i class="fa-solid fa-calendar-days"></i> Birth Date</label>
+                </div>
+            </div>
+
+            <div class="input-group flex-row">
+                <div class="floating-input" style="flex: 1;">
+                    <select id="genderInput" disabled onchange="this.classList.add('has-val')">
+                        <option value="" disabled selected hidden></option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <label><i class="fa-solid fa-venus-mars"></i> Gender</label>
+                    <i class="fa-solid fa-chevron-down select-arrow"></i>
+                </div>
+                
+                <div class="floating-input" style="flex: 1;">
+                    <input type="text" id="cityInput" placeholder=" " disabled>
+                    <label><i class="fa-solid fa-city"></i> City</label>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div class="floating-input">
+                    <select id="countryInput" disabled onchange="this.classList.add('has-val')">
+                        <option value="" disabled selected hidden></option>
+                        <option value="Bangladesh">Bangladesh</option>
+                        <option value="India">India</option>
+                        <option value="United States">United States</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="UAE">United Arab Emirates</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <label><i class="fa-solid fa-globe"></i> Country</label>
+                    <i class="fa-solid fa-chevron-down select-arrow"></i>
                 </div>
             </div>
 
@@ -185,7 +251,6 @@
                 
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 
-                // Fetch User Details
                 const { data, error } = await supabaseClient.auth.getUser();
                 
                 if (error) throw error;
@@ -197,11 +262,27 @@
                 }
 
                 currentUser = data.user;
+                const meta = currentUser.user_metadata || {};
                 
                 // Populate Form
-                document.getElementById('nameInput').value = currentUser.user_metadata?.full_name || '';
-                document.getElementById('dobInput').value = currentUser.user_metadata?.dob || '';
+                document.getElementById('nameInput').value = meta.full_name || '';
                 document.getElementById('emailInput').value = currentUser.email || '';
+                document.getElementById('dobInput').value = meta.dob || '';
+                document.getElementById('phoneInput').value = meta.phone || '';
+                document.getElementById('cityInput').value = meta.city || '';
+                
+                if(meta.dial_code) document.getElementById('dialCodeInput').value = meta.dial_code;
+                
+                if(meta.gender) {
+                    const gInput = document.getElementById('genderInput');
+                    gInput.value = meta.gender;
+                    gInput.classList.add('has-val');
+                }
+                if(meta.country) {
+                    const cInput = document.getElementById('countryInput');
+                    cInput.value = meta.country;
+                    cInput.classList.add('has-val');
+                }
 
                 // Show UI
                 document.getElementById('loadingScreen').style.display = 'none';
@@ -222,11 +303,12 @@
 
         // --- Edit & Update Logic ---
         function handleAction() {
+            const inputs = ['nameInput', 'dialCodeInput', 'phoneInput', 'dobInput', 'genderInput', 'cityInput', 'countryInput'];
+            
             if (!isEditing) {
                 // Turn on Edit Mode
                 isEditing = true;
-                document.getElementById('nameInput').disabled = false;
-                document.getElementById('dobInput').disabled = false;
+                inputs.forEach(id => document.getElementById(id).disabled = false);
                 
                 // Change Button to Save Mode
                 const btn = document.getElementById('actionBtn');
@@ -238,48 +320,48 @@
                 document.getElementById('nameInput').focus();
             } else {
                 // Perform Save
-                saveProfile();
+                saveProfile(inputs);
             }
         }
 
-        async function saveProfile() {
+        async function saveProfile(inputIDs) {
             const nameInput = document.getElementById('nameInput');
-            const dobInput = document.getElementById('dobInput');
-            
             const newName = nameInput.value.trim();
-            const newDob = dobInput.value;
-
+            
             nameInput.classList.remove('error-border');
-            dobInput.classList.remove('error-border');
 
-            if(!newName || !newDob) {
-                if(!newName) nameInput.classList.add('error-border');
-                if(!newDob) dobInput.classList.add('error-border');
-                return showToast("Fields cannot be empty!", "error");
+            if(!newName) {
+                nameInput.classList.add('error-border');
+                return showToast("Full Name is required!", "error");
             }
 
-            const btn = document.getElementById('actionBtn');
-            const btnIcon = document.getElementById('btnIcon');
-            const btnText = document.getElementById('btnText');
-            
-            btn.disabled = true;
-            btnIcon.className = "fa-solid fa-circle-notch fa-spin";
-            btnText.innerText = "Saving...";
+            const btn = document.getElementById('actionBtn'), btnIcon = document.getElementById('btnIcon'), btnText = document.getElementById('btnText');
+            btn.disabled = true; btnIcon.className = "fa-solid fa-circle-notch fa-spin"; btnText.innerText = "Saving...";
 
             try {
-                // Update Metadata in Supabase
-                const { data, error } = await supabaseClient.auth.updateUser({
-                    data: { full_name: newName, dob: newDob }
-                });
+                // Collect Metadata
+                const metaData = {
+                    full_name: newName,
+                    dob: document.getElementById('dobInput').value,
+                    dial_code: document.getElementById('dialCodeInput').value,
+                    phone: document.getElementById('phoneInput').value.trim(),
+                    gender: document.getElementById('genderInput').value,
+                    city: document.getElementById('cityInput').value.trim(),
+                    country: document.getElementById('countryInput').value
+                };
 
+                // Clean up empty selects so they don't save as undefined strings
+                if(!metaData.gender) delete metaData.gender;
+                if(!metaData.country) delete metaData.country;
+
+                const { data, error } = await supabaseClient.auth.updateUser({ data: metaData });
                 if (error) throw error;
 
                 // Success State Reversion
                 showToast("Profile updated successfully!", "success");
                 
                 isEditing = false;
-                nameInput.disabled = true;
-                dobInput.disabled = true;
+                inputIDs.forEach(id => document.getElementById(id).disabled = true);
                 
                 btn.classList.remove('btn-success');
                 document.getElementById('displayTitle').innerText = "My Profile";
@@ -289,24 +371,18 @@
             } finally {
                 btn.disabled = false;
                 if(!isEditing) {
-                    btnIcon.className = "fa-solid fa-pen-to-square";
-                    btnText.innerText = "Edit Profile";
+                    btnIcon.className = "fa-solid fa-pen-to-square"; btnText.innerText = "Edit Profile";
                 } else {
-                    btnIcon.className = "fa-solid fa-floppy-disk";
-                    btnText.innerText = "Save Changes";
+                    btnIcon.className = "fa-solid fa-floppy-disk"; btnText.innerText = "Save Changes";
                 }
             }
         }
 
         function showToast(m, type="success") {
-            const t = document.getElementById('toastMsg');
-            const icon = document.getElementById('toastIcon');
+            const t = document.getElementById('toastMsg'), icon = document.getElementById('toastIcon');
             document.getElementById('toastText').innerText = m;
-            
             t.className = `toast show ${type}`;
-            if(type === "error") icon.className = "fa-solid fa-circle-exclamation";
-            else icon.className = "fa-solid fa-circle-check";
-            
+            if(type === "error") icon.className = "fa-solid fa-circle-exclamation"; else icon.className = "fa-solid fa-circle-check";
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
