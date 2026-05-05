@@ -38,52 +38,26 @@
         h2 { color: var(--text-main); margin-top: 0; margin-bottom: 5px; }
         p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
 
-        /* --- MODERN OUTLINE INPUTS (Match with Image) --- */
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .input-group { position: relative; text-align: left; margin-bottom: 5px; }
-        .input-group.full { grid-column: span 2; }
+        /* --- MODERN OUTLINE INPUTS --- */
+        .input-group { position: relative; text-align: left; margin-bottom: 20px; width: 100%; }
         
         .floating-input { position: relative; width: 100%; }
         .floating-input input {
-            width: 100%;
-            padding: 16px 15px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            background: transparent;
-            color: var(--text-main);
-            transition: all 0.3s ease;
-            font-family: inherit;
+            width: 100%; padding: 16px 15px; border: 2px solid var(--border);
+            border-radius: 8px; font-size: 1rem; background: transparent;
+            color: var(--text-main); transition: all 0.3s ease; font-family: inherit;
         }
         
         .floating-input label {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--bg-card); /* Creates the border-break effect */
-            padding: 0 6px;
-            color: #64748b;
-            font-size: 1rem;
-            pointer-events: none;
-            transition: 0.2s ease all;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            background: var(--bg-card); padding: 0 6px; color: #64748b; font-size: 1rem;
+            pointer-events: none; transition: 0.2s ease all; display: flex; align-items: center; gap: 6px;
         }
 
         /* Focus & Active State */
-        .floating-input input:focus,
-        .floating-input input:not(:placeholder-shown) {
-            border-color: var(--primary);
-        }
-        
-        .floating-input input:focus ~ label,
-        .floating-input input:not(:placeholder-shown) ~ label {
-            top: 0;
-            font-size: 0.8rem;
-            color: var(--primary);
-            font-weight: 600;
+        .floating-input input:focus, .floating-input input:not(:placeholder-shown) { border-color: var(--primary); }
+        .floating-input input:focus ~ label, .floating-input input:not(:placeholder-shown) ~ label {
+            top: 0; font-size: 0.8rem; color: var(--primary); font-weight: 600;
         }
 
         /* Error State */
@@ -102,17 +76,17 @@
         .strength-text { font-size: 0.8rem; margin-top: 5px; text-align: right; display: none; font-weight: 600;}
 
         /* Buttons */
-        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 25px; display: flex; justify-content: center; align-items: center; gap: 10px;}
+        .btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 10px;}
         .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
-        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none;}
         
         .link { display: block; margin-top: 20px; color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.2s;}
         .link:hover { text-decoration: underline; }
         
-        /* Success Message */
-        .success-box { display: none; background: #ecfdf5; color: var(--success); padding: 15px; border-radius: 8px; border: 1px solid #a7f3d0; font-weight: bold; margin-bottom: 20px; }
+        /* Success Message Box */
+        .success-box { display: none; background: #f0fdf4; color: #065f46; padding: 25px; border-radius: 12px; border: 2px solid #34d399; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
+        .success-icon { font-size: 3rem; color: var(--success); margin-bottom: 15px; }
 
-        @media (max-width: 480px) { .input-grid { grid-template-columns: 1fr; gap: 15px; } .input-group.full { grid-column: span 1; } }
     </style>
 </head>
 <body>
@@ -130,31 +104,32 @@
         <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
         <a href="login.html"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
         <a href="signup.html" class="active"><i class="fa-solid fa-user-plus"></i> Sign Up</a>
+        <a href="contact.html"><i class="fa-solid fa-envelope"></i> Contact Us</a>
     </div>
 
     <div class="container">
         <div class="card">
-            <h2>Create Account</h2>
-            <p class="subtitle">Secure your digital life with zero-knowledge encryption.</p>
             
-            <div class="success-box" id="successBox"></div>
+            <div class="success-box" id="successBox">
+                <i class="fa-solid fa-envelope-circle-check success-icon"></i>
+                <h3 style="margin-top: 0; color: #064e3b;">Verify Your Email</h3>
+                <p style="font-size: 0.95rem; line-height: 1.5; color: #065f46; margin-bottom: 20px;">
+                    Account created successfully! We've sent a confirmation email to your address.<br><br>
+                    <strong>Please open your Mail App, check your Inbox (or Junk/Spam folder), and click the confirmation link to activate your account.</strong>
+                </p>
+                <button class="btn" onclick="window.location.href='login.html'">Go to Login Page</button>
+            </div>
 
-            <div class="input-grid">
-                
-                <div class="input-group full">
+            <div id="formSection">
+                <h2>Create Account</h2>
+                <p class="subtitle">Secure your digital life with zero-knowledge encryption.</p>
+
+                <div class="input-group">
                     <div class="floating-input">
                         <input type="text" id="name" placeholder=" ">
                         <label><i class="fa-solid fa-id-card"></i> Full Name</label>
                     </div>
                     <div class="error-text" id="nameError"></div>
-                </div>
-                
-                <div class="input-group">
-                    <div class="floating-input">
-                        <input type="text" id="username" placeholder=" ">
-                        <label><i class="fa-solid fa-user"></i> Username</label>
-                    </div>
-                    <div class="error-text" id="usernameError"></div>
                 </div>
                 
                 <div class="input-group">
@@ -165,7 +140,7 @@
                     <div class="error-text" id="dobError"></div>
                 </div>
 
-                <div class="input-group full">
+                <div class="input-group">
                     <div class="floating-input">
                         <input type="email" id="email" placeholder=" ">
                         <label><i class="fa-solid fa-envelope"></i> Email Address</label>
@@ -173,7 +148,7 @@
                     <div class="error-text" id="emailError"></div>
                 </div>
 
-                <div class="input-group full">
+                <div class="input-group">
                     <div class="floating-input">
                         <input type="password" id="password" placeholder=" " oninput="checkStrength()">
                         <label><i class="fa-solid fa-lock"></i> Create Password</label>
@@ -185,13 +160,12 @@
                     <div class="strength-text" id="sText">Weak</div>
                 </div>
 
+                <button class="btn" id="regBtn" onclick="processSignUp()">
+                    <i class="fa-solid fa-user-plus" id="btnIcon"></i> 
+                    <span id="btnText">Create Account</span>
+                </button>
+                <a href="login.html" class="link">Already have an account? Login here</a>
             </div>
-
-            <button class="btn" id="regBtn" onclick="processSignUp()">
-                <i class="fa-solid fa-user-plus" id="btnIcon"></i> 
-                <span id="btnText">Create Account</span>
-            </button>
-            <a href="login.html" class="link">Already have an account? Login here</a>
         </div>
     </div>
 
@@ -277,21 +251,12 @@
             let hasError = false;
 
             const name = document.getElementById('name').value.trim();
-            const username = document.getElementById('username').value.trim();
             const dob = document.getElementById('dob').value;
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
 
             // Basic Validations
             if(!name) { showError('name', 'Full Name is required.'); hasError = true; }
-            
-            // 🔥 Username Strict Validation (5-25 chars, Letters & Numbers Only)
-            const usernameRegex = /^[a-zA-Z0-9]{5,25}$/;
-            if(!username) { 
-                showError('username', 'Username is required.'); hasError = true; 
-            } else if(!usernameRegex.test(username)) {
-                showError('username', 'Use 5-25 characters. Letters and numbers only.'); hasError = true; 
-            }
             
             // Age Validation
             if(!dob) { 
@@ -325,7 +290,7 @@
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
-                options: { data: { full_name: name, username: username, dob: dob } }
+                options: { data: { full_name: name, dob: dob } }
             });
 
             // Reset Button Animation
@@ -346,16 +311,9 @@
                 if (data.user && data.user.identities && data.user.identities.length === 0) {
                     showError('email', 'This email is already registered! Please login.');
                 } else {
-                    // Success!
-                    const successBox = document.getElementById('successBox');
-                    successBox.style.display = 'block';
-                    successBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> Account created successfully! Redirecting...';
-                    
-                    document.querySelector('.input-grid').style.display = 'none';
-                    btn.style.display = 'none';
-                    document.querySelector('.link').style.display = 'none';
-                    
-                    setTimeout(() => window.location.href = "login.html", 2500);
+                    // Success Flow: Hide form and show Verification Message
+                    document.getElementById('formSection').style.display = 'none';
+                    document.getElementById('successBox').style.display = 'block';
                 }
             }
         }
